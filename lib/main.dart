@@ -5,16 +5,26 @@ import 'package:shop/providers/transaction_provider.dart';
 import 'package:shop/providers/theme_provider.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/router.dart' as router;
+import 'package:shop/services/auth_service.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final AuthService authService = AuthService();
+  bool isLoggedIn = await authService.isLoggedIn();
+
+  runApp(MyApp(
+    isLoggedIn: isLoggedIn,
+  ));
 }
 
 // Thanks for using our template. You are using the free version of the template.
 // 🔗 Full template: https://theflutterway.gumroad.com/l/fluttershop
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  final bool isLoggedIn;
+
+  MyApp({required this.isLoggedIn});
 
   // This widget is the root of your application.
   @override

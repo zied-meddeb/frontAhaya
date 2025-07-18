@@ -63,3 +63,4 @@ const String profileDetailsScreenRoute = "profile_details";
 
 
 
+const String supplierScreenRoute = "supplier";

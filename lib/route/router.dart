@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:shop/entry_point.dart';
 import 'package:shop/screens/favoris/views/favoris_screen.dart';
 
 import '../models/product_model.dart';
+import '../providers/theme_provider.dart';
 import '../screens/discover/views/all_products_screen.dart';
+import '../screens/main_screen.dart';
 import '../screens/preferences/views/pereference_screen.dart';
 import '../screens/profile/views/profile_details.dart';
 import 'screen_export.dart';
 
-
 Route<dynamic> generateRoute(RouteSettings settings) {
   switch (settings.name) {
     case onbordingScreenRoute:
-      return MaterialPageRoute(
-        builder: (context) => const OnBordingScreen(),
-      );
+      return MaterialPageRoute(builder: (context) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Provider.of<ThemeProvider>(context, listen: false).switchToAppTheme();
+        });
+
+        return const OnBordingScreen();
+      });
+
     // case preferredLanuageScreenRoute:
     //   return MaterialPageRoute(
     //     builder: (context) => const PreferredLanguageScreen(),
@@ -27,11 +34,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const SignUpScreen(),
       );
-      case emailVerification:
+    case emailVerification:
       return MaterialPageRoute(
-  builder: (context){
-    String email = settings.arguments as String;
-    return EmailVerificationPage(email:email);} ,
+        builder: (context) {
+          String email = settings.arguments as String;
+          return EmailVerificationPage(email: email);
+        },
       );
 
     case productDetailsScreenRoute:
@@ -77,7 +85,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       );
     case profileScreenRoute:
       return MaterialPageRoute(
-        builder: (context) =>  ProfileScreen(),
+        builder: (context) => ProfileScreen(),
       );
     case notificationsScreenRoute:
       return MaterialPageRoute(
@@ -98,7 +106,7 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
     case preferencesScreenRoute:
       return MaterialPageRoute(
-        builder: (context) =>  const CategoriesSelectionPage(),
+        builder: (context) => const CategoriesSelectionPage(),
       );
 
     case emptyWalletScreenRoute:
@@ -121,9 +129,18 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
     case profileDetailsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) =>  ProfileDetailScreen(),
+        builder: (context) => ProfileDetailScreen(),
       );
 
+    case supplierScreenRoute:
+      return MaterialPageRoute(builder: (context) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Provider.of<ThemeProvider>(context, listen: false)
+              .setSupplierTheme(_isSupplierRoute(settings.name));
+        });
+
+        return const MainScreen();
+      });
 
     default:
       return MaterialPageRoute(
@@ -131,4 +148,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         builder: (context) => const OnBordingScreen(),
       );
   }
+}
+
+bool _isSupplierRoute(String? routeName) {
+  const supplierRoutes = [supplierScreenRoute, "supplier"];
+
+  return supplierRoutes.contains(routeName);
 }

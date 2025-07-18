@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import '../constants.dart';
 
+//Template Theme
+
 const AppBarTheme appBarLightTheme = AppBarTheme(
   backgroundColor: Colors.white,
   elevation: 0,

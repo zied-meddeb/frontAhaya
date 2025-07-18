@@ -86,17 +86,20 @@ class _OnBordingScreenState extends State<OnBordingScreen>
     _mainSlide = Tween<Offset>(
       begin: Offset(0, 0.3),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _logoEntranceController, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(
+        parent: _logoEntranceController, curve: Curves.easeOut));
 
     _textSlide = Tween<Offset>(
       begin: Offset(0, 0.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _textEntranceController, curve: Curves.easeOut));
+    ).animate(CurvedAnimation(
+        parent: _textEntranceController, curve: Curves.easeOut));
 
     _buttonSlide = Tween<Offset>(
       begin: Offset(0, 0.2),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _buttonController, curve: Curves.easeOut));
+    ).animate(
+        CurvedAnimation(parent: _buttonController, curve: Curves.easeOut));
 
     // Start loading animations
     _logoLoadingController.repeat();
@@ -156,7 +159,8 @@ class _OnBordingScreenState extends State<OnBordingScreen>
           animation: _logoLoadingController,
           builder: (context, child) {
             return Transform.scale(
-              scale: 1.0 + (0.02 * math.sin(_logoLoadingController.value * 2 * math.pi)),
+              scale: 1.0 +
+                  (0.02 * math.sin(_logoLoadingController.value * 2 * math.pi)),
               child: Image.asset(
                 'assets/logo/logo.png',
                 width: 320,
@@ -165,8 +169,6 @@ class _OnBordingScreenState extends State<OnBordingScreen>
             );
           },
         ),
-
-
 
         // Simple loading coupons
         Row(
@@ -187,7 +189,8 @@ class _OnBordingScreenState extends State<OnBordingScreen>
           animation: _textLoadingController,
           builder: (context, child) {
             return Opacity(
-              opacity: 0.5 + 0.5 * math.sin(_textLoadingController.value * 2 * math.pi),
+              opacity: 0.5 +
+                  0.5 * math.sin(_textLoadingController.value * 2 * math.pi),
               child: Text(
                 'Chargement...',
                 style: TextStyle(
@@ -202,12 +205,12 @@ class _OnBordingScreenState extends State<OnBordingScreen>
     );
   }
 
-
   Widget _buildSimpleCoupon(int delayMs) {
     return AnimatedBuilder(
       animation: _couponController,
       builder: (context, child) {
-        double animationValue = (_couponController.value * 1200 - delayMs) / 1200;
+        double animationValue =
+            (_couponController.value * 1200 - delayMs) / 1200;
         if (animationValue < 0) animationValue = 0;
         if (animationValue > 1) animationValue = 1;
 
@@ -300,8 +303,6 @@ class _OnBordingScreenState extends State<OnBordingScreen>
               },
             ),
 
-
-
             // Simple welcome message
             SlideTransition(
               position: _textSlide,
@@ -337,36 +338,75 @@ class _OnBordingScreenState extends State<OnBordingScreen>
               position: _buttonSlide,
               child: FadeTransition(
                 opacity: _buttonOpacity,
-                child: AnimatedContainer(
-                  duration: Duration(milliseconds: 200),
-                  child:   SizedBox(
-                    width: double.infinity,
-                    height: kIsWeb ? 52 : 60,
-                    child: MouseRegion(
-                      cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Logique de connexion
-                          Navigator.pushNamed(context, entryPointScreenRoute);
-
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        child: const Text(
-                          'Découvrir',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
+                child: Column(
+                  children: [
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: kIsWeb ? 52 : 60,
+                        child: MouseRegion(
+                          cursor: kIsWeb
+                              ? SystemMouseCursors.click
+                              : MouseCursor.defer,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.pushNamed(
+                                  context, entryPointScreenRoute);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Découvrir',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                    SizedBox(height: 16), // Add spacing between buttons
+                    AnimatedContainer(
+                      duration: Duration(milliseconds: 200),
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: kIsWeb ? 52 : 60,
+                        child: MouseRegion(
+                          cursor: kIsWeb
+                              ? SystemMouseCursors.click
+                              : MouseCursor.defer,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              // Navigate to espace fournisseur
+                              Navigator.pushNamed(context, supplierScreenRoute);
+
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.black,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text(
+                              'Espace Fournisseur',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

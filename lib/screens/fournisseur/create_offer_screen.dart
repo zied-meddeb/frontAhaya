@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/offer_provider.dart';
-import '../models/offer.dart';
-import '../theme/app_theme.dart';
-import '../widgets/step_indicator.dart';
-import '../widgets/gradient_button.dart';
-
+import 'package:shop/models/offer.dart';
+import '../../providers/offer_provider.dart';
+import '../../models/promotion.dart';
+import '../../services/promotion_service.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/step_indicator.dart';
+import '../../widgets/gradient_button.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 class CreateOfferScreen extends StatefulWidget {
   const CreateOfferScreen({super.key});
 
@@ -16,35 +20,29 @@ class CreateOfferScreen extends StatefulWidget {
 class _CreateOfferScreenState extends State<CreateOfferScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  final int _totalSteps = 4;
+  final int _totalSteps = 4; // Includes basic info, location, pricing, product selection, timing
   bool _isSubmitting = false;
 
   // Form controllers
   final _formKey = GlobalKey<FormState>();
-  final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _locationController = TextEditingController();
   final _originalPriceController = TextEditingController();
   final _promotionalPriceController = TextEditingController();
   final _videoLinkController = TextEditingController();
 
-  String _selectedCategory = '';
+  List<XFile> _selectedImages = []; // Store selected images
+  List<String> _imageUrls = []; // Store uploaded image URLs
+  final ImagePicker _picker = ImagePicker();
+
+  String _selectedType = 'Biens';
   String _selectedCountry = '';
   String _selectedRegion = '';
+  DateTime? _promotionStartDate;
   DateTime? _promotionEndDate;
-  DateTime? _displayPeriodStart;
-  DateTime? _displayPeriodEnd;
+  List<String> _selectedProductIds = [];
 
-  final List<String> _categories = [
-    'Restaurant',
-    'Hôtel',
-    'Spa & Bien-être',
-    'Activités',
-    'Shopping',
-    'Transport',
-    'Divertissement'
-  ];
-
+  final List<String> _types = ['Biens', 'Services'];
   final List<String> _countries = [
     'Tunisie',
     'Maroc',
@@ -54,18 +52,73 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     'Italie',
     'Allemagne'
   ];
-
   final List<String> _tunisianGovernorates = [
     'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan',
     'Bizerte', 'Béja', 'Jendouba', 'Kef', 'Siliana', 'Sousse',
     'Monastir', 'Mahdia', 'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid',
     'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kebili',
   ];
+  List<Map<String, dynamic>> _products = [];
+
+  // Initialize PromotionService with authentication token
+  final PromotionService _promotionService = PromotionService(); // Replace with actual token
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  // Fetch products for the fournisseur
+  Future<void> _fetchProducts() async {
+    try {
+      const fournisseurId = 'your-fournisseur-id'; // Replace with actual fournisseur ID
+      final products = await _promotionService.fetchProducts(fournisseurId);
+      setState(() {
+        _products = products;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors du chargement des produits: $e')),
+      );
+    }
+  }
+
+  Future<void> _pickImages() async {
+    try {
+      final List<XFile>? images = await _picker.pickMultiImage(
+        maxWidth: 1920,
+        maxHeight: 1920,
+      );
+      if (images != null && images.isNotEmpty) {
+        List<XFile> processedImages = [];
+        for (var image in images) {
+          if (image.mimeType == 'image/png') {
+            final compressedFile = await FlutterImageCompress.compressAndGetFile(
+              image.path,
+              image.path.replaceAll('.png', '_compressed.png'),
+              minWidth: 1920,
+              minHeight: 1920,
+            );
+            processedImages.add(compressedFile != null ? XFile(compressedFile.path, mimeType: 'image/png') : image);
+          } else {
+            processedImages.add(image);
+          }
+        }
+        setState(() {
+          _selectedImages.addAll(processedImages.where((img) => img.mimeType == 'image/jpeg' || img.mimeType == 'image/png'));
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la sélection des images: $e')),
+      );
+    }
+  }
 
   @override
   void dispose() {
     _pageController.dispose();
-    _titleController.dispose();
     _descriptionController.dispose();
     _locationController.dispose();
     _originalPriceController.dispose();
@@ -79,9 +132,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     return Scaffold(
       body: Column(
         children: [
-          // Progress Header
           _buildProgressHeader(),
-          // Form Content
           Expanded(
             child: PageView(
               controller: _pageController,
@@ -90,17 +141,17 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 _buildBasicInfoStep(),
                 _buildLocationStep(),
                 _buildPricingStep(),
-                _buildMediaTimingStep(),
+                _buildTimingStep(),
               ],
             ),
           ),
-          // Navigation Buttons
           _buildNavigationButtons(),
         ],
       ),
     );
   }
 
+  // Build the progress header with step indicator
   Widget _buildProgressHeader() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -124,7 +175,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Créer une Nouvelle Offre',
+                      'Créer une Nouvelle Promotion',
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -140,21 +191,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey[300]!),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.edit_note, size: 16),
-                    SizedBox(width: 4),
-                    Text('Brouillon'),
-                  ],
-                ),
-              ),
+
             ],
           ),
           const SizedBox(height: 16),
@@ -167,6 +204,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Basic information step (type and description)
   Widget _buildBasicInfoStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -194,69 +232,123 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              
-              // Category Dropdown
+
               DropdownButtonFormField<String>(
-                value: _selectedCategory.isEmpty ? null : _selectedCategory,
+                value: _selectedType,
                 decoration: const InputDecoration(
-                  labelText: 'Catégorie *',
+                  labelText: 'Type de promotion *',
                   prefixIcon: Icon(Icons.category),
                 ),
-                items: _categories.map((category) => DropdownMenuItem(
-                  value: category,
-                  child: Text(category),
+                items: _types.map((type) => DropdownMenuItem(
+                  value: type,
+                  child: Text(type),
                 )).toList(),
-                onChanged: (value) => setState(() => _selectedCategory = value ?? ''),
-                validator: (value) => value == null ? 'Catégorie requise' : null,
+                onChanged: (value) => setState(() => _selectedType = value ?? 'Biens'),
+                validator: (value) => value == null ? 'Type requis' : null,
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Title Field
+
               TextFormField(
-                controller: _titleController,
+                controller: _locationController,
                 decoration: const InputDecoration(
-                  labelText: 'Titre de l\'offre *',
-                  prefixIcon: Icon(Icons.title),
-                  hintText: 'Ex: Restaurant Dar Zarrouk - Menu traditionnel tunisien',
+                  labelText: 'Nom Produit',
+                  prefixIcon: Icon(Icons.place),
+                  hintText: 'Iphone 15, Samsung S21..',
                 ),
-                validator: (value) => value?.isEmpty == true ? 'Titre requis' : null,
+                validator: (value) => value?.isEmpty == true ? 'Nom requis' : null,
               ),
-              
+
               const SizedBox(height: 16),
-              
-              // Description Field
+
               TextFormField(
                 controller: _descriptionController,
                 maxLines: 4,
                 decoration: const InputDecoration(
                   labelText: 'Description *',
                   prefixIcon: Icon(Icons.description),
-                  hintText: 'Décrivez votre offre en détail...',
+                  hintText: 'Décrivez votre promotion en détail...',
                 ),
                 validator: (value) => value?.isEmpty == true ? 'Description requise' : null,
               ),
-              
               const SizedBox(height: 16),
-              
-              // Image Upload Placeholder
+
+              // Image Upload Section
               Container(
                 height: 120,
                 decoration: BoxDecoration(
-                  border: Border.all(color: Colors.blue[300]!, width: 2, style: BorderStyle.solid),
+                  border: Border.all(color: Colors.blue[300]!, width: 2),
                   borderRadius: BorderRadius.circular(12),
                   color: Colors.blue[50],
                 ),
-                child: const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.cloud_upload, size: 40, color: Colors.blue),
-                      SizedBox(height: 8),
-                      Text('Téléchargez votre image', style: TextStyle(fontWeight: FontWeight.w600)),
-                      Text('PNG, JPG jusqu\'à 5MB', style: TextStyle(color: Colors.grey)),
-                    ],
+                child: _selectedImages.isEmpty
+                    ? InkWell(
+                  onTap: _pickImages,
+                  child: const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.cloud_upload, size: 40, color: Colors.blue),
+                        SizedBox(height: 8),
+                        Text('Téléchargez vos images', style: TextStyle(fontWeight: FontWeight.w600)),
+                        Text('PNG, JPG jusqu\'à 5MB', style: TextStyle(color: Colors.grey)),
+                      ],
+                    ),
                   ),
+                )
+                    : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.all(8),
+                  itemCount: _selectedImages.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == _selectedImages.length) {
+                      return InkWell(
+                        onTap: _pickImages,
+                        child: Container(
+                          width: 100,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.blue[300]!),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Center(
+                            child: Icon(Icons.add_photo_alternate, color: Colors.blue),
+                          ),
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(
+                              File(_selectedImages[index].path),
+                              width: 100,
+                              height: 100,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                          Positioned(
+                            top: 0,
+                            right: 0,
+                            child: GestureDetector(
+                              onTap: () => setState(() {
+                                _selectedImages.removeAt(index);
+                              }),
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: Colors.red,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.close, color: Colors.white, size: 16),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
               ),
             ],
@@ -266,6 +358,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Location step (country, governorate, specific location)
   Widget _buildLocationStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -293,45 +386,41 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              
-              Row(
+
+              Column(
                 children: [
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedCountry.isEmpty ? null : _selectedCountry,
-                      decoration: const InputDecoration(
-                        labelText: 'Pays *',
-                        prefixIcon: Icon(Icons.flag),
-                      ),
-                      items: _countries.map((country) => DropdownMenuItem(
-                        value: country,
-                        child: Text('🇹🇳 $country'),
-                      )).toList(),
-                      onChanged: (value) => setState(() => _selectedCountry = value ?? ''),
-                      validator: (value) => value == null ? 'Pays requis' : null,
+                  DropdownButtonFormField<String>(
+                    value: _selectedCountry.isEmpty ? null : _selectedCountry,
+                    decoration: const InputDecoration(
+                      labelText: 'Pays *',
+                      prefixIcon: Icon(Icons.flag),
                     ),
+                    items: _countries.map((country) => DropdownMenuItem(
+                      value: country,
+                      child: Text('🇹🇳 $country'),
+                    )).toList(),
+                    onChanged: (value) => setState(() => _selectedCountry = value ?? ''),
+                    validator: (value) => value == null ? 'Pays requis' : null,
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedRegion.isEmpty ? null : _selectedRegion,
-                      decoration: const InputDecoration(
-                        labelText: 'Gouvernorat *',
-                        prefixIcon: Icon(Icons.map),
-                      ),
-                      items: _tunisianGovernorates.map((gov) => DropdownMenuItem(
-                        value: gov,
-                        child: Text(gov),
-                      )).toList(),
-                      onChanged: (value) => setState(() => _selectedRegion = value ?? ''),
-                      validator: (value) => value == null ? 'Gouvernorat requis' : null,
+                  const SizedBox(height: 16),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRegion.isEmpty ? null : _selectedRegion,
+                    decoration: const InputDecoration(
+                      labelText: 'Gouvernorat *',
+                      prefixIcon: Icon(Icons.map),
                     ),
+                    items: _tunisianGovernorates.map((gov) => DropdownMenuItem(
+                      value: gov,
+                      child: Text(gov),
+                    )).toList(),
+                    onChanged: (value) => setState(() => _selectedRegion = value ?? ''),
+                    validator: (value) => value == null ? 'Gouvernorat requis' : null,
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
-              
+
               TextFormField(
                 controller: _locationController,
                 decoration: const InputDecoration(
@@ -341,9 +430,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 ),
                 validator: (value) => value?.isEmpty == true ? 'Lieu requis' : null,
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -377,6 +466,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Pricing step (original and promotional price)
   Widget _buildPricingStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
@@ -408,7 +498,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 ],
               ),
               const SizedBox(height: 24),
-              
+
               Row(
                 children: [
                   Expanded(
@@ -448,10 +538,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 24),
-              
-              // Discount Calculator
+
               if (_originalPriceController.text.isNotEmpty && _promotionalPriceController.text.isNotEmpty)
                 _buildDiscountCalculator(),
             ],
@@ -461,17 +550,18 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Discount calculator for pricing step
   Widget _buildDiscountCalculator() {
     final original = double.tryParse(_originalPriceController.text);
     final promotional = double.tryParse(_promotionalPriceController.text);
-    
+
     if (original == null || promotional == null || promotional >= original) {
       return const SizedBox.shrink();
     }
-    
+
     final discountPercent = ((original - promotional) / original * 100).round();
     final savings = original - promotional;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -529,7 +619,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
-  Widget _buildMediaTimingStep() {
+
+  // Timing step (start and end dates)
+  Widget _buildTimingStep() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Card(
@@ -546,17 +638,33 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                       gradient: SupplierTheme.orangeGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(Icons.video_library, color: Colors.white),
+                    child: const Icon(Icons.calendar_today, color: Colors.white),
                   ),
                   const SizedBox(width: 16),
                   const Text(
-                    'Média et Planification',
+                    'Planification',
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
               const SizedBox(height: 24),
-              
+
+              _buildDateField(
+                'Début de la promotion *',
+                _promotionStartDate,
+                    (date) => setState(() => _promotionStartDate = date),
+              ),
+
+              const SizedBox(height: 16),
+
+              _buildDateField(
+                'Fin de la promotion *',
+                _promotionEndDate,
+                    (date) => setState(() => _promotionEndDate = date),
+              ),
+
+              const SizedBox(height: 16),
+
               TextFormField(
                 controller: _videoLinkController,
                 decoration: const InputDecoration(
@@ -565,37 +673,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   hintText: 'https://youtube.com/watch?v=...',
                 ),
               ),
-              
-              const SizedBox(height: 16),
-              
-              // Date fields
-              _buildDateField(
-                'Fin de la promotion *',
-                _promotionEndDate,
-                (date) => setState(() => _promotionEndDate = date),
-              ),
-              
-              const SizedBox(height: 16),
-              
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildDateField(
-                      'Début d\'affichage *',
-                      _displayPeriodStart,
-                      (date) => setState(() => _displayPeriodStart = date),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildDateField(
-                      'Fin d\'affichage *',
-                      _displayPeriodEnd,
-                      (date) => setState(() => _displayPeriodEnd = date),
-                    ),
-                  ),
-                ],
-              ),
             ],
           ),
         ),
@@ -603,6 +680,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Date picker field
   Widget _buildDateField(String label, DateTime? value, Function(DateTime) onChanged) {
     return InkWell(
       onTap: () async {
@@ -620,9 +698,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           prefixIcon: const Icon(Icons.calendar_today),
         ),
         child: Text(
-          value != null 
-            ? '${value.day}/${value.month}/${value.year}'
-            : 'Sélectionner une date',
+          value != null
+              ? '${value.day}/${value.month}/${value.year}'
+              : 'Sélectionner une date',
           style: TextStyle(
             color: value != null ? Colors.black87 : Colors.grey[600],
           ),
@@ -631,6 +709,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
+  // Navigation buttons (Previous/Next/Submit)
   Widget _buildNavigationButtons() {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -663,44 +742,45 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             flex: 2,
             child: _currentStep < _totalSteps - 1
                 ? GradientButton(
-                    onPressed: _nextStep,
-                    gradient: SupplierTheme.blueGradient,
-                    child: const Text('Suivant', style: TextStyle(color: Colors.white)),
-                  )
+              onPressed: _nextStep,
+              gradient: SupplierTheme.blueGradient,
+              child: const Text('Suivant', style: TextStyle(color: Colors.white)),
+            )
                 : GradientButton(
-                    onPressed: _isSubmitting ? null : _submitOffer,
-                    gradient: SupplierTheme.emeraldGradient,
-                    child: _isSubmitting
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                ),
-                              ),
-                              SizedBox(width: 8),
-                              Text('Création...', style: TextStyle(color: Colors.white)),
-                            ],
-                          )
-                        : const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.check_circle, color: Colors.white),
-                              SizedBox(width: 8),
-                              Text('Créer l\'offre', style: TextStyle(color: Colors.white)),
-                            ],
-                          ),
+              onPressed: _isSubmitting ? null : _submitOffer,
+              gradient: SupplierTheme.emeraldGradient,
+              child: _isSubmitting
+                  ? const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    ),
                   ),
+                  SizedBox(width: 8),
+                  Text('Création...', style: TextStyle(color: Colors.white)),
+                ],
+              )
+                  : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white),
+                  SizedBox(width: 8),
+                  Text('Créer la promotion', style: TextStyle(color: Colors.white)),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
 
+  // Handle next step navigation with validation
   void _nextStep() {
     if (_validateCurrentStep()) {
       _pageController.nextPage(
@@ -725,31 +805,31 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
+  // Validate the current step
   bool _validateCurrentStep() {
     switch (_currentStep) {
-      case 0:
-        return _selectedCategory.isNotEmpty &&
-               _titleController.text.isNotEmpty &&
-               _descriptionController.text.isNotEmpty;
-      case 1:
+      case 0: // Basic Info
+        return _selectedType.isNotEmpty && _descriptionController.text.isNotEmpty;
+      case 1: // Location
         return _selectedCountry.isNotEmpty &&
-               _selectedRegion.isNotEmpty &&
-               _locationController.text.isNotEmpty;
-      case 2:
+            _selectedRegion.isNotEmpty &&
+            _locationController.text.isNotEmpty;
+      case 2: // Pricing
         final original = double.tryParse(_originalPriceController.text);
         final promotional = double.tryParse(_promotionalPriceController.text);
         return original != null &&
-               promotional != null &&
-               promotional < original;
-      case 3:
-        return _promotionEndDate != null &&
-               _displayPeriodStart != null &&
-               _displayPeriodEnd != null;
+            promotional != null &&
+            promotional < original;
+      case 3: // Product Selection
+        return _selectedProductIds.isNotEmpty; // Require at least one product
+      case 4: // Timing
+        return _promotionStartDate != null && _promotionEndDate != null;
       default:
         return false;
     }
   }
 
+  // Submit the promotion to the backend
   Future<void> _submitOffer() async {
     if (!_validateCurrentStep()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -764,29 +844,20 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      // Simulate API call
-      await Future.delayed(const Duration(seconds: 2));
-
-      final newOffer = Offer(
-        id: DateTime.now().millisecondsSinceEpoch,
-        title: _titleController.text,
-        category: _selectedCategory,
+      final promotion = Promotion(
+        type: _selectedType,
         description: _descriptionController.text,
-        location: _locationController.text,
-        country: _selectedCountry,
-        region: _selectedRegion,
-        originalPrice: double.parse(_originalPriceController.text),
-        promotionalPrice: double.parse(_promotionalPriceController.text),
-        status: OfferStatus.pendingValidation,
-        endDate: _promotionEndDate!,
-        displayPeriodStart: _displayPeriodStart!,
-        displayPeriodEnd: _displayPeriodEnd!,
-        videoLink: _videoLinkController.text.isEmpty ? null : _videoLinkController.text,
-        createdAt: DateTime.now(),
-        submittedAt: DateTime.now(),
+        prixOriginal: double.parse(_originalPriceController.text),
+        prixOffre: double.parse(_promotionalPriceController.text),
+        dateDebut: _promotionStartDate!,
+        dateFin: _promotionEndDate!,
+        produits: _selectedProductIds.isNotEmpty ? _selectedProductIds : null,
       );
 
-      await context.read<OfferProvider>().addOffer(newOffer);
+      final createdPromotion = await _promotionService.createPromotion(promotion);
+
+      // Update OfferProvider if needed
+      await context.read<OfferProvider>().addOffer(createdPromotion as Offer);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -795,8 +866,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('🎉 Offre soumise avec succès !', style: TextStyle(fontWeight: FontWeight.bold)),
-                Text('Votre offre "${_titleController.text}" est en attente de validation.'),
+                const Text('🎉 Promotion soumise avec succès !', style: TextStyle(fontWeight: FontWeight.bold)),
+                Text('Votre promotion "${_descriptionController.text}" est en attente de validation.'),
                 const Text('Vous recevrez une notification une fois approuvée.'),
               ],
             ),
@@ -810,8 +881,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Une erreur est survenue lors de la création de l\'offre'),
+          SnackBar(
+            content: Text('Erreur lors de la création de la promotion: $e'),
             backgroundColor: Colors.red,
           ),
         );
@@ -823,24 +894,24 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
+  // Reset the form after submission
   void _resetForm() {
-    _titleController.clear();
     _descriptionController.clear();
     _locationController.clear();
     _originalPriceController.clear();
     _promotionalPriceController.clear();
     _videoLinkController.clear();
-    
+
     setState(() {
-      _selectedCategory = '';
+      _selectedType = 'Biens';
       _selectedCountry = '';
       _selectedRegion = '';
+      _promotionStartDate = null;
       _promotionEndDate = null;
-      _displayPeriodStart = null;
-      _displayPeriodEnd = null;
+      _selectedProductIds = [];
       _currentStep = 0;
     });
-    
+
     _pageController.animateToPage(
       0,
       duration: const Duration(milliseconds: 300),

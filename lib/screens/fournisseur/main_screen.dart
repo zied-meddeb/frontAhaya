@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/offer_provider.dart';
-import '../providers/transaction_provider.dart';
-import '../theme/app_theme.dart';
+import '../../providers/offer_provider.dart';
+import '../../providers/transaction_provider.dart';
+import '../../theme/app_theme.dart';
 import 'create_offer_screen.dart';
 import 'my_offers_screen.dart';
 import 'payments_screen.dart';
+
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/offer_provider.dart';
-import '../models/offer.dart';
-import '../theme/app_theme.dart';
-import '../widgets/offer_card.dart';
-import '../widgets/validation_status_widget.dart';
-import '../widgets/offer_stats_cards.dart';
+import '../../models/offer.dart';
+import '../../providers/offer_provider.dart';
+import '../../theme/app_theme.dart';
+import '../../widgets/offer_card.dart';
+import '../../widgets/offer_stats_cards.dart';
+import '../../widgets/validation_status_widget.dart';
 
 class MyOffersScreen extends StatefulWidget {
   const MyOffersScreen({super.key});

@@ -20,6 +20,10 @@ export '/screens/profile/views/profile_screen.dart';
 export '/screens/profile/views/profile_not_connected.dart';
 export '/screens/profile/views/profile_details.dart';
 export '/screens/extra/language_screen.dart';
+export '/screens/fournisseur/create_offer_screen.dart';
+export '/screens/fournisseur/payments_screen.dart';
+export '/screens/fournisseur/my_offers_screen.dart';
+
 
 
 

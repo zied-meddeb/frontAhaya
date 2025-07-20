@@ -6,7 +6,7 @@ import 'package:shop/screens/favoris/views/favoris_screen.dart';
 import '../models/product_model.dart';
 import '../providers/theme_provider.dart';
 import '../screens/discover/views/all_products_screen.dart';
-import '../screens/main_screen.dart';
+import '../screens/fournisseur/main_screen.dart';
 import '../screens/preferences/views/pereference_screen.dart';
 import '../screens/profile/views/profile_details.dart';
 import 'screen_export.dart';
@@ -141,6 +141,12 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
         return const MainScreen();
       });
+
+    case fournissuerScreen:
+      return MaterialPageRoute(
+        builder: (context) => const MainScreen(),
+      );
+
 
     default:
       return MaterialPageRoute(

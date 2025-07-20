@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../providers/transaction_provider.dart';
-import '../models/transaction.dart';
-import '../theme/app_theme.dart';
+
+import '../../models/transaction.dart';
+import '../../providers/transaction_provider.dart';
+import '../../theme/app_theme.dart';
+
 
 class PaymentsScreen extends StatefulWidget {
   const PaymentsScreen({super.key});
@@ -70,7 +72,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                             ),
                           ),
                           ElevatedButton.icon(
-                            onPressed: () => transactionProvider.simulateNewTransaction(),
+                            onPressed: () => transactionProvider?.simulateNewTransaction(),
                             icon: const Icon(Icons.add),
                             label: const Text('Simuler transaction'),
                             style: ElevatedButton.styleFrom(

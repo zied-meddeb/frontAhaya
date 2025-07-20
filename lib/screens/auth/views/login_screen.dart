@@ -1,12 +1,13 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shop/services/user_service.dart';
+import 'package:shop/services/fournisseur_service.dart';
+import 'package:shop/services/user_service.dart' hide AuthException;
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
 
 import '../../../route/route_constants.dart';
 import '../../../services/auth_service.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,7 +20,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _showPassword = false;
   String _activeTab = 'utilisateur';
   bool _isAnimating = false;
-  bool isLoading=false;
+  bool isLoading = false;
 
   late AnimationController _animationController;
   late Animation<double> _rotationAnimation;
@@ -52,10 +53,7 @@ class _LoginScreenState extends State<LoginScreen>
       curve: const Interval(0.0, 0.5),
     ));
     _checkIfLoggedIn();
-
   }
-
-
 
   @override
   void dispose() {
@@ -85,7 +83,6 @@ class _LoginScreenState extends State<LoginScreen>
     });
   }
 
-  // Fonction pour ouvrir les liens (compatible web/mobile)
   Future<void> _launchUrl(String url) async {
     final Uri uri = Uri.parse(url);
     if (!await launchUrl(uri)) {
@@ -94,8 +91,11 @@ class _LoginScreenState extends State<LoginScreen>
       }
     }
   }
+
   final AuthService _auth = AuthService();
-  final UserService _userService=UserService();
+  final UserService _userService = UserService();
+  final FournisseurService _fournisseurService = FournisseurService();
+
   Future<void> _checkIfLoggedIn() async {
     bool loggedIn = await _auth.isLoggedIn();
     if (loggedIn) {
@@ -119,22 +119,38 @@ class _LoginScreenState extends State<LoginScreen>
     setState(() => isLoading = true);
 
     try {
-      final success = await _userService.login(
-        _emailController.text.trim(),
-        _passwordController.text,
-      );
+      bool success;
+      if (_activeTab == 'utilisateur') {
+        success = await _userService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+      } else {
+        success = await _fournisseurService.login(
+          _emailController.text.trim(),
+          _passwordController.text,
+        );
+      }
 
       if (!mounted) return;
 
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Connexion réussie'),
+          SnackBar(
+            content: Text(_activeTab == 'utilisateur'
+                ? 'Connexion utilisateur réussie'
+                : 'Connexion partenaire réussie'),
             backgroundColor: Colors.green,
             duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pushReplacementNamed(context, entryPointScreenRoute);
+        if(_activeTab == 'utilisateur'){
+          Navigator.pushReplacementNamed(context, entryPointScreenRoute);
+        }
+        else{
+          Navigator.pushReplacementNamed(context, fournissuerScreen);
+        }
+
       }
     } on AuthException catch (e) {
       if (!mounted) return;
@@ -167,7 +183,6 @@ class _LoginScreenState extends State<LoginScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Adaptation responsive pour web et mobile
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth > 768;
     final cardWidth = isDesktop ? 400.0 : screenWidth * 0.9;
@@ -191,8 +206,7 @@ class _LoginScreenState extends State<LoginScreen>
                     ..setEntry(3, 2, 0.001)
                     ..rotateY(_rotationAnimation.value * math.pi),
                   child: Opacity(
-                    opacity: _isAnimating ?
-                    (1.0 - _opacityAnimation.value) : 1.0,
+                    opacity: _isAnimating ? (1.0 - _opacityAnimation.value) : 1.0,
                     child: Card(
                       color: Colors.white,
                       elevation: kIsWeb ? 4 : 2,
@@ -204,7 +218,6 @@ class _LoginScreenState extends State<LoginScreen>
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // Logo
                             Container(
                               margin: const EdgeInsets.only(bottom: 32),
                               child: Column(
@@ -217,7 +230,6 @@ class _LoginScreenState extends State<LoginScreen>
                                     ),
                                     child: Image.asset(
                                       'assets/logo/logo.png',
-
                                       width: 320,
                                       height: 300,
                                     ),
@@ -225,9 +237,6 @@ class _LoginScreenState extends State<LoginScreen>
                                 ],
                               ),
                             ),
-
-
-                            // Tabs
                             Container(
                               margin: const EdgeInsets.only(bottom: 24),
                               decoration: BoxDecoration(
@@ -324,8 +333,6 @@ class _LoginScreenState extends State<LoginScreen>
                                 ],
                               ),
                             ),
-
-                            // Content
                             if (_isAnimating)
                               SizedBox(
                                 height: kIsWeb ? 250 : 200,
@@ -339,8 +346,6 @@ class _LoginScreenState extends State<LoginScreen>
                               _buildUserContent()
                             else
                               _buildProviderContent(),
-
-                            // Footer
                             Container(
                               margin: const EdgeInsets.only(top: 24),
                               child: Column(
@@ -374,7 +379,6 @@ class _LoginScreenState extends State<LoginScreen>
                                         child: TextButton(
                                           onPressed: () {
                                             Navigator.pushNamed(context, signUpScreenRoute);
-
                                           },
                                           style: TextButton.styleFrom(
                                             padding: EdgeInsets.zero,
@@ -422,18 +426,15 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildUserContent() {
     return Column(
       children: [
-
-        // Social Login Buttons
         Column(
           children: [
             SizedBox(
               width: double.infinity,
-              height: kIsWeb ? 52 :57,
+              height: kIsWeb ? 52 : 57,
               child: MouseRegion(
                 cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
                 child: OutlinedButton.icon(
                   onPressed: () {
-                    // Logique de connexion Google
                     if (kDebugMode) {
                       print('Connexion Google');
                     }
@@ -446,7 +447,6 @@ class _LoginScreenState extends State<LoginScreen>
                       fit: BoxFit.contain,
                     ),
                   ),
-
                   label: const Text(
                     'Continuer avec Google',
                     style: TextStyle(
@@ -463,44 +463,8 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
             ),
-            // const SizedBox(height: 12),
-            // SizedBox(
-            //   width: double.infinity,
-            //   height: kIsWeb ? 52 : 48,
-            //   child: MouseRegion(
-            //     cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
-            //     child: ElevatedButton.icon(
-            //       onPressed: () {
-            //         // Logique de connexion Facebook
-            //         if (kDebugMode) {
-            //           print('Connexion Facebook');
-            //         }
-            //       },
-            //       icon: const Icon(
-            //         Icons.facebook,
-            //         color: Colors.white,
-            //         size: 20,
-            //       ),
-            //       label: const Text(
-            //         'Continuer avec Facebook',
-            //         style: TextStyle(
-            //           color: Colors.white,
-            //           fontSize: 16,
-            //         ),
-            //       ),
-            //       style: ElevatedButton.styleFrom(
-            //         backgroundColor: const Color(0xFF1877F2),
-            //         shape: RoundedRectangleBorder(
-            //           borderRadius: BorderRadius.circular(8),
-            //         ),
-            //       ),
-            //     ),
-            //   ),
-            // ),
           ],
         ),
-
-        // Divider
         Container(
           margin: const EdgeInsets.symmetric(vertical: 24),
           child: Row(
@@ -520,8 +484,6 @@ class _LoginScreenState extends State<LoginScreen>
             ],
           ),
         ),
-
-        // Form
         _buildForm('votre@email.com'),
       ],
     );
@@ -530,9 +492,6 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildProviderContent() {
     return Column(
       children: [
-
-
-        // Form
         _buildForm('contact@entreprise.com'),
       ],
     );
@@ -542,7 +501,6 @@ class _LoginScreenState extends State<LoginScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Email Field
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -563,6 +521,7 @@ class _LoginScreenState extends State<LoginScreen>
                 prefixIcon: const Icon(Icons.email_outlined, color: Colors.grey),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(8),
+
                   borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
                 ),
                 enabledBorder: OutlineInputBorder(
@@ -581,10 +540,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ],
         ),
-
         const SizedBox(height: 16),
-
-        // Password Field
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -637,10 +593,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
           ],
         ),
-
         const SizedBox(height: 24),
-
-        // Login Button
         SizedBox(
           width: double.infinity,
           height: kIsWeb ? 52 : 60,

@@ -9,6 +9,7 @@ import '../../../../constants.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/favoris_service.dart';
 import '../../../discover/views/all_products_screen.dart';
+import '../../../favoris/views/login_pop_up.dart';
 
 class PopularProducts extends StatefulWidget {
   const PopularProducts({super.key});
@@ -61,52 +62,104 @@ class _PopularProductsState extends State<PopularProducts> {
     try {
       final response = await _productService.getAllProducts();
 
+      if (response['data'] != null && response['data'] is List) {
         setState(() {
           products = response['data'].map((item) => ProductModel(
             id: item['_id'] ?? '',
             image: item['imageUrl'] ?? '',
-            brandName: item['fournisseur']['nom'] ?? 'Unknown Brand',
+            brandName: item['fournisseur']?['nom'] ?? 'Unknown Brand',
             title: item['nom'] ?? '',
-            price: item['prix'].toDouble() ?? 0.0,
-            priceAfetDiscount: item['old_prix']?.toDouble() ?? item['prix'].toDouble(),
+            price: (item['prix'] ?? 0.0).toDouble(),
+            priceAfetDiscount: (item['old_prix'] ?? item['prix'] ?? 0.0).toDouble(),
             dicountpercent: item['promotion']?['pourcentage'] ?? 0,
             description: item['description'] ?? '',
           )).toList();
         });
+      }
 
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading products: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
   Future<void> _fetchFavorites() async {
     try {
       final userId = await _auth.getUserId();
-      if (userId != null) {
+      if (userId != null && userId.isNotEmpty) {
         final favorites = await _favoritesService.fetchFavorites(userId);
-        setState(() {
-          favoriteProductIds = favorites.map((product) => product.id).toList();
-        });
+        if (mounted) {
+          setState(() {
+            favoriteProductIds = favorites.map((product) => product.id ?? '').where((id) => id.isNotEmpty).toList();
+          });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      debugPrint('Error fetching favorites: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du chargement des favoris: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
   bool _isProductFavorite(String productId) {
     return favoriteProductIds.contains(productId);
+  }
+
+  Future<void> toggleFavorite(String productId) async {
+    if (!mounted) return;
+    try {
+      final userId = await _auth.getUserId();
+      if (userId == null || userId.isEmpty) return;
+      
+      final isFavorite = _isProductFavorite(productId);
+      
+      if (isFavorite) {
+        // Remove from favorites
+        await _favoritesService.removeFavorite(userId, productId);
+        setState(() {
+          favoriteProductIds.remove(productId);
+        });
+      } else {
+        // Add to favorites
+        await _favoritesService.addFavorite(userId, productId);
+        setState(() {
+          favoriteProductIds.add(productId);
+        });
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(isFavorite ? 'Retiré des favoris' : 'Ajouté aux favoris'),
+              backgroundColor: isFavorite ? Colors.orange : Colors.green,
+              duration: Duration(seconds: 2),
+            ));
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Erreur: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -126,25 +179,27 @@ class _PopularProductsState extends State<PopularProducts> {
             ),
             const Spacer(),
             TextButton.icon(
-
               onPressed: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ProductListingScreen(),
                     maintainState: true,
-
                   ),
                 );
               },
-              icon: const Text(
+              label: const Text(
                 "Voir plus",
-                style: TextStyle(fontWeight: FontWeight.w500, color: Colors.black,fontSize: 12),
-
+                style: TextStyle(
+                  fontWeight: FontWeight.w500, 
+                  color: Colors.black,
+                  fontSize: 12
+                ),
               ),
-              label: const Icon(
+              icon: const Icon(
                 Icons.arrow_forward,
                 size: 12,
+                color: Colors.black,
               ),
             ),
 
@@ -183,9 +238,16 @@ class _PopularProductsState extends State<PopularProducts> {
                   );
                 },
                 onFavoritePressed: () async {
-
+                  final productId = products[index].id;
+                  if (isLoggedIn) {
+                    await toggleFavorite(productId);
+                  } else {
+                    showDialog(
+                      context: context,
+                      builder: (context) => DiscountModal(),
+                    );
                   }
-                ,
+                },
               ),
             ),
           ),

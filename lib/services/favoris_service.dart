@@ -10,10 +10,10 @@ class FavoritesService {
   final AuthService _auth = AuthService();
 
   // Constructor with optional baseUrl parameter for flexibility
-  FavoritesService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  FavoritesService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));
 
@@ -30,26 +30,35 @@ class FavoritesService {
   // Fetch favorites for a user
   Future<List<ProductModel>> fetchFavorites(String userId) async {
     try {
-
       final response = await dio.get('/favoris/$userId');
       if (response.statusCode == 200) {
-        final List<dynamic> responseData = response.data['data'];
+        final List<dynamic> responseData = response.data['data'] ?? [];
 
-        return responseData.map((item) => ProductModel(
-          id: item['produit']['_id'] ?? '',
-          image: item['produit']['imageUrl'] ?? '',
-          brandName: item['produit']['fournisseur']['nom'] ?? 'Unknown Brand',
-          title: item['produit']['nom'] ?? '',
-          price: item['produit']['prix'].toDouble() ?? 0.0,
-          priceAfetDiscount: item['produit']['old_prix']?.toDouble(),
-          dicountpercent: item['produit']['promotion']?['pourcentage'] ?? 0,
-          description: item['produit']['description'] ?? '',
-        )).toList();
+        return responseData.map((item) {
+          // Safely access nested product data
+          final product = item['produit'] ?? {};
+          final fournisseur = product['fournisseur'] ?? {};
+          final promotion = product['promotion'];
+          
+          return ProductModel(
+            id: product['_id']?.toString() ?? '',
+            image: product['imageUrl']?.toString() ?? '',
+            brandName: fournisseur['nom']?.toString() ?? 'Unknown Brand',
+            title: product['nom']?.toString() ?? '',
+            price: (product['prix'] is num) ? (product['prix'] as num).toDouble() : 0.0,
+            priceAfetDiscount: (product['old_prix'] is num) ? (product['old_prix'] as num).toDouble() : null,
+            dicountpercent: (promotion != null && promotion['pourcentage'] is num) ? promotion['pourcentage'] as int : 0,
+            description: product['description']?.toString() ?? '',
+            categoryId: product['category']?.toString(),
+            categoryName: product['categoryName']?.toString(),
+          );
+        }).toList();
       } else {
-        throw Exception(response.data['message']);
+        throw Exception(response.data['message'] ?? 'Failed to fetch favorites');
       }
     } catch (e) {
-      throw Exception('$e');
+      print('Error fetching favorites: $e');
+      throw Exception('Error fetching favorites: $e');
     }
   }
 
@@ -70,10 +79,11 @@ class FavoritesService {
         print("success ${response.data}");
         return response.data;
       } else {
-        throw Exception("$response['message']");
+        throw Exception(response.data['message'] ?? 'Failed to add favorite');
       }
     } catch (e) {
-      return e;
+      print('Error adding favorite: $e');
+      throw Exception('Error adding favorite: $e');
     }
   }
 
@@ -83,14 +93,31 @@ class FavoritesService {
         '/favoris/is-favorited/$userId/$productId',
       );
       if (response.statusCode == 200) {
-
-        return response.data['data']['isFavorited'];
+        return response.data['data']?['isFavorited'] ?? false;
       } else {
         return false;
       }
-
     } catch (e) {
+      print('Error checking favorite status: $e');
       return false;
+    }
+  }
+
+  Future<dynamic> removeFavorite(String userId, String productId) async {
+    try {
+      final response = await dio.delete(
+        '/favoris/$userId/$productId',
+      );
+
+      if (response.statusCode == 200) {
+        print("removed favorite ${response.data}");
+        return response.data;
+      } else {
+        throw Exception(response.data['message'] ?? 'Failed to remove favorite');
+      }
+    } catch (e) {
+      print('Error removing favorite: $e');
+      throw Exception('Error removing favorite: $e');
     }
   }
 }

@@ -7,6 +7,8 @@ class ProductModel {
   final double price;
   final double? priceAfetDiscount;
   final int? dicountpercent;
+  final String? categoryId;
+  final String? categoryName;
 
 
   ProductModel({
@@ -18,6 +20,8 @@ class ProductModel {
      required this.description,
     this.priceAfetDiscount,
     this.dicountpercent,
+    this.categoryId,
+    this.categoryName,
   });
 }
 
@@ -31,7 +35,8 @@ List<ProductModel>  demoFlashSaleProducts= [
     title: "Wireless Controller for PS4™",
     price: 64.99,
     description: "Wireless Controller for PS4™",
-
+    categoryId: "1",
+    categoryName: "Electronics",
   )
 ];
 
@@ -44,7 +49,8 @@ List<ProductModel> demoPopularProducts = [
     title: "Wireless Controller for PS4™",
     price: 64.99,
     description: "Wireless Controller for PS4™",
-
+    categoryId: "1",
+    categoryName: "Electronics",
   )
 ];
 List<ProductModel> demoBestSellersProducts = [
@@ -55,7 +61,8 @@ List<ProductModel> demoBestSellersProducts = [
     title: "Wireless Controller for PS4™",
     price: 64.99,
     description: "Wireless Controller for PS4™",
-
+    categoryId: "1",
+    categoryName: "Electronics",
   )
 ];
 List<ProductModel> kidsProducts = [
@@ -66,6 +73,7 @@ List<ProductModel> kidsProducts = [
     title: "Wireless Controller for PS4™",
     price: 64.99,
     description: "Wireless Controller for PS4™",
-
+    categoryId: "1",
+    categoryName: "Electronics",
   )
 ];

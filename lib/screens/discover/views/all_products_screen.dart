@@ -1,16 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:shop/route/screen_export.dart';
 import 'package:shop/screens/discover/views/product.dart';
 import '../../../models/product_model.dart';
 import '../../../route/route_constants.dart';
 import '../../../services/auth_service.dart';
 import '../../../services/favoris_service.dart';
 import '../../../services/produit_service.dart';
+import '../../../services/categorie_service.dart';
 import '../../favoris/views/login_pop_up.dart';
 import 'all_product_card.dart';
 import 'drawer.dart';
 
 class ProductListingScreen extends StatefulWidget {
-  const ProductListingScreen({super.key});
+  final String? initialSearchTerm;
+  
+  const ProductListingScreen({super.key, this.initialSearchTerm});
 
   @override
   _ProductListingScreenState createState() => _ProductListingScreenState();
@@ -20,7 +24,6 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   String searchTerm = '';
   bool isGridView = true;
   String sortBy = 'popularite';
-  List<Category> categories = ProductsData.categories;
   int currentPage = 1;
   Set<int> favorites = {};
   final int itemsPerPage = 12;
@@ -28,27 +31,63 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   bool showSuggestions = false;
   FocusNode searchFocusNode = FocusNode();
 
+  final ProductService _productService = ProductService();
+  final AuthService _auth = AuthService();
+  final FavoritesService _favoritesService = FavoritesService();
+  final CategoriesService _categoriesService = CategoriesService();
+
+  List<dynamic> productsList = [];
+  List<dynamic> allProductsList = []; // Keep original list for filtering
+  List<String> favoriteProductIds = [];
+  List<dynamic> categories = [];
+  List<String> selectedCategoryIds = [];
+  bool isLoading = true;
+  bool isLoggedIn = false;
+
   List<dynamic> get filteredProducts {
-    List<dynamic> filtered = productsList.where((product) {
+    List<dynamic> filtered = allProductsList.where((product) {
+      // Filter by search term
       if (searchTerm.isNotEmpty) {
-        final productName = product.title.toLowerCase();
         final searchLower = searchTerm.toLowerCase();
-        if (!productName.contains(searchLower)) {
+        if (!(product.title.toLowerCase().contains(searchLower) ||
+              product.brandName.toLowerCase().contains(searchLower) ||
+              product.description.toLowerCase().contains(searchLower))) {
           return false;
         }
       }
 
-      // List<String> selectedCategories = categories
-      //     .where((cat) => cat.checked)
-      //     .map((cat) => cat.name)
-      //     .toList();
-      // if (selectedCategories.isNotEmpty &&
-      //     !selectedCategories.contains(product.category)) {
-      //   return false;
-      // }
+      // Filter by selected categories (if any categories are selected)
+      if (selectedCategoryIds.isNotEmpty) {
+        if (product.categoryId == null || !selectedCategoryIds.contains(product.categoryId)) {
+          return false;
+        }
+      }
 
       return true;
     }).toList();
+
+    // Apply sorting
+    switch (sortBy) {
+      case 'price_low_high':
+        filtered.sort((a, b) => a.price.compareTo(b.price));
+        break;
+      case 'price_high_low':
+        filtered.sort((a, b) => b.price.compareTo(a.price));
+        break;
+      case 'discount':
+        filtered.sort((a, b) => b.dicountpercent.compareTo(a.dicountpercent));
+        break;
+      case 'name_az':
+        filtered.sort((a, b) => a.title.compareTo(b.title));
+        break;
+      case 'name_za':
+        filtered.sort((a, b) => b.title.compareTo(a.title));
+        break;
+      case 'popularite':
+      default:
+        // Keep original order for popularity (assuming API returns popular items first)
+        break;
+    }
 
     return filtered;
   }
@@ -63,7 +102,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     }
 
     final queryLower = query.toLowerCase();
-    final suggestions = productsList
+    final suggestions = allProductsList
         .map((product) => product.title)
         .where((name) => name.toLowerCase().contains(queryLower))
         .toSet()
@@ -95,7 +134,13 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   void clearFilters() {
     setState(() {
       searchTerm = '';
-      categories = categories.map((cat) => Category(name: cat.name, count: cat.count)).toList();
+      selectedCategoryIds.clear();
+      // Reset all categories to unchecked if needed
+      for (var category in categories) {
+        if (category is Map && category.containsKey('checked')) {
+          category['checked'] = false;
+        }
+      }
       currentPage = 1;
       searchSuggestions = [];
       showSuggestions = false;
@@ -109,32 +154,29 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     return 2;
   }
 
-  final ProductService _productService = ProductService();
-  final AuthService _auth = AuthService();
-  final FavoritesService _favoritesService = FavoritesService();
-
-  List<dynamic> productsList = [];
-  List<String> favoriteProductIds = [];
-  bool isLoading = true;
-  bool isLoggedIn = false;
-
   Future<void> fetchData() async {
     try {
       final response = await _productService.getAllProducts();
 
-      setState(() {
-        productsList = response['data'].map((item) => ProductModel(
+      if (response['data'] != null && response['data'] is List) {
+        final products = response['data'].map((item) => ProductModel(
           id: item['_id'] ?? '',
           image: item['imageUrl'] ?? '',
-          brandName: item['fournisseur']['nom'] ?? 'Unknown Brand',
+          brandName: item['fournisseur']?['nom'] ?? 'Unknown Brand',
           title: item['nom'] ?? '',
-          price: item['prix'].toDouble() ?? 0.0,
-          priceAfetDiscount: item['old_prix']?.toDouble() ?? item['prix'].toDouble(),
+          price: (item['prix'] ?? 0.0).toDouble(),
+          priceAfetDiscount: (item['old_prix'] ?? item['prix'] ?? 0.0).toDouble(),
           dicountpercent: item['promotion']?['pourcentage'] ?? 0,
           description: item['description'] ?? '',
+          categoryId: item['category']?['_id'] ?? item['category'] ?? '',
+          categoryName: item['category']?['nom'] ?? 'Unknown Category',
         )).toList();
-      });
-
+        
+        setState(() {
+          productsList = products;
+          allProductsList = products; // Keep original list for filtering
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -150,6 +192,8 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     try {
       isLoggedIn = await _auth.isLoggedIn();
       await fetchData();
+      // Fetch categories after products are loaded to get accurate counts
+      await _fetchCategories();
       if (isLoggedIn) {
         await _fetchFavorites();
       }
@@ -163,23 +207,49 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     }
   }
 
+  Future<void> _fetchCategories() async {
+    try {
+      final categoriesResponse = await _categoriesService.fetchCategories();
+      setState(() {
+        categories = categoriesResponse.map((item) => {
+          'id': item['_id'] ?? '',
+          'name': item['nom'] ?? '',
+          'checked': false,
+          'count': _getProductCountForCategory(item['_id'] ?? ''),
+        }).toList();
+      });
+    } catch (e) {
+      debugPrint('Error fetching categories: $e');
+    }
+  }
+
+  int _getProductCountForCategory(String categoryId) {
+    if (allProductsList.isEmpty) return 0;
+    return allProductsList.where((product) => product.categoryId == categoryId).length;
+  }
+
   Future<void> _fetchFavorites() async {
     try {
       final userId = await _auth.getUserId();
-      if (userId != null) {
+      if (userId != null && userId.isNotEmpty) {
         final favorites = await _favoritesService.fetchFavorites(userId);
-        setState(() {
-          favoriteProductIds = favorites.map((product) => product.id).toList();
-        });
+        if (mounted) {
+          setState(() {
+            favoriteProductIds = favorites.map((product) => product.id ?? '').where((id) => id.isNotEmpty).toList();
+          });
+        }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(e.toString()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      debugPrint('Error fetching favorites: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du chargement des favoris: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -187,16 +257,33 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     return favoriteProductIds.contains(productId);
   }
 
-  Future<void> addToFavorites(id) async {
+  Future<void> toggleFavorite(String productId) async {
     if (!mounted) return;
     try {
       final userId = await _auth.getUserId();
-      await _favoritesService.addFavorite(userId as String, id);
+      if (userId == null) return;
+      
+      final isFavorite = _isProductFavorite(productId);
+      
+      if (isFavorite) {
+        // Remove from favorites
+        await _favoritesService.removeFavorite(userId, productId);
+        setState(() {
+          favoriteProductIds.remove(productId);
+        });
+      } else {
+        // Add to favorites
+        await _favoritesService.addFavorite(userId, productId);
+        setState(() {
+          favoriteProductIds.add(productId);
+        });
+      }
+      
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Opération réussie'),
-              backgroundColor: Colors.green,
+            SnackBar(
+              content: Text(isFavorite ? 'Retiré des favoris' : 'Ajouté aux favoris'),
+              backgroundColor: isFavorite ? Colors.orange : Colors.green,
               duration: Duration(seconds: 2),
             ));
       }
@@ -213,7 +300,34 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     }
   }
 
-  void _showDiscountModal() {
+  void _onCategoryChanged(String categoryId, bool checked) {
+    setState(() {
+      // Update the category in the categories list
+      for (var category in categories) {
+        if (category['id'] == categoryId) {
+          category['checked'] = checked;
+          break;
+        }
+      }
+      
+      // Update selected category IDs
+      if (checked) {
+        selectedCategoryIds.add(categoryId);
+      } else {
+        selectedCategoryIds.remove(categoryId);
+      }
+      
+      currentPage = 1; // Reset to first page when filter changes
+    });
+  }
+
+  void _updateCategoryCounts() {
+    setState(() {
+      for (var category in categories) {
+        category['count'] = _getProductCountForCategory(category['id']);
+      }
+    });
+  }  void _showDiscountModal() {
     if (!mounted) return;
     showDialog(
       context: context,
@@ -225,6 +339,10 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
   @override
   void initState() {
     super.initState();
+    // Initialize search term if provided
+    if (widget.initialSearchTerm != null) {
+      searchTerm = widget.initialSearchTerm!;
+    }
     _loadInitialData();
   }
 
@@ -244,7 +362,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
         title: Row(
           children: [
             Text(
-              '${productsList.length} résultats',
+              '${filteredProducts.length} résultats',
               style: TextStyle(fontSize: 14, color: Colors.grey[600]),
             ),
             Spacer(),
@@ -258,9 +376,11 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
               },
               items: const [
                 DropdownMenuItem(value: 'popularite', child: Text('Popularité')),
-                DropdownMenuItem(value: 'prix-croissant', child: Text('Prix ↑')),
-                DropdownMenuItem(value: 'prix-decroissant', child: Text('Prix ↓')),
-                DropdownMenuItem(value: 'nouveautes', child: Text('Nouveautés')),
+                DropdownMenuItem(value: 'price_low_high', child: Text('Prix ↑')),
+                DropdownMenuItem(value: 'price_high_low', child: Text('Prix ↓')),
+                DropdownMenuItem(value: 'name_az', child: Text('A-Z')),
+                DropdownMenuItem(value: 'name_za', child: Text('Z-A')),
+                DropdownMenuItem(value: 'discount', child: Text('Remise')),
               ],
             ),
             const SizedBox(width: 8),
@@ -300,12 +420,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
           _updateSuggestions(value);
         },
         categories: categories,
-        onCategoryChanged: (category, checked) {
-          setState(() {
-            category.checked = checked;
-            currentPage = 1;
-          });
-        },
+        onCategoryChanged: _onCategoryChanged,
         onClearFilters: clearFilters,
         searchSuggestions: searchSuggestions,
         onSuggestionSelected: (suggestion) {
@@ -372,16 +487,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                         onToggleFavorite: () async {
                           final productId = product.id;
                           if (isLoggedIn) {
-                            await addToFavorites(productId);
-                            if (mounted) {
-                              setState(() {
-                                if (_isProductFavorite(productId)) {
-                                  favoriteProductIds.remove(productId);
-                                } else {
-                                  favoriteProductIds.add(productId);
-                                }
-                              });
-                            }
+                            await toggleFavorite(productId);
                           } else {
                             _showDiscountModal();
                           }
@@ -413,16 +519,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
                         onToggleFavorite: () async {
                           final productId = product.id;
                           if (isLoggedIn) {
-                            await addToFavorites(productId);
-                            if (mounted) {
-                              setState(() {
-                                if (_isProductFavorite(productId)) {
-                                  favoriteProductIds.remove(productId);
-                                } else {
-                                  favoriteProductIds.add(productId);
-                                }
-                              });
-                            }
+                            await toggleFavorite(productId);
                           } else {
                             _showDiscountModal();
                           }
@@ -467,45 +564,4 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
       ),
     );
   }
-}
-
-class ProductsData {
-  static List<Product> products = [
-    Product(
-      id: 1,
-      name: "Parfum Élégance",
-      price: 89.99,
-      originalPrice: 99.99,
-      discount: "-10%",
-      discountType: "green",
-      rating: 4.5,
-      reviewCount: 124,
-      image: "https://via.placeholder.com/200x200/E8E8E8/666666?text=Parfum",
-      category: "Parfums",
-      brand: "Luxe Paris",
-      description: "Un parfum sophistiqué aux notes florales",
-    ),
-    // ... other products ...
-  ];
-
-  static List<Category> categories = [
-    Category(name: "Mode et beauté", count: 143),
-    Category(name: "Parfums", count: 89),
-    Category(name: "Soin du corps", count: 28),
-    Category(name: "Vêtements", count: 156),
-    Category(name: "Sous-vêtements", count: 7),
-    Category(name: "Chaussures", count: 2),
-  ];
-}
-
-class Category {
-  final String name;
-  final int count;
-  bool checked;
-
-  Category({
-    required this.name,
-    required this.count,
-    this.checked = false,
-  });
 }

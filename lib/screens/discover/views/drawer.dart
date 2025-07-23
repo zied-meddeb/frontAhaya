@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'all_products_screen.dart';
 
 class FilterDrawer extends StatefulWidget {
   final String searchTerm;
   final Function(String) onSearchChanged;
-  final List<Category> categories;
-  final Function(Category, bool) onCategoryChanged;
+  final List<dynamic> categories;
+  final Function(String, bool) onCategoryChanged;
   final VoidCallback onClearFilters;
   final List<String> searchSuggestions;
   final Function(String) onSuggestionSelected;
@@ -129,12 +128,12 @@ class _FilterDrawerState extends State<FilterDrawer> {
                       SizedBox(height: 12),
                       ...widget.categories.map((category) => CheckboxListTile(
                         title: Text(
-                          '${category.name} (${category.count})',
+                          '${category['name'] ?? 'Unknown Category'} (${category['count'] ?? 0})',
                           style: TextStyle(fontSize: 14),
                         ),
-                        value: category.checked,
+                        value: category['checked'] ?? false,
                         onChanged: (value) =>
-                            widget.onCategoryChanged(category, value!),
+                            widget.onCategoryChanged(category['id'], value!),
                         dense: true,
                         contentPadding: EdgeInsets.zero,
                       )),

@@ -8,10 +8,10 @@ import 'dio_interceptor.dart';
 class PromotionService {
   final String baseUrl;
   late final Dio dio;
-  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}){
+  PromotionService({this.baseUrl = 'http://localhost:3100/api'}){
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));
 

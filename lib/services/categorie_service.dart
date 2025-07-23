@@ -10,10 +10,10 @@ class CategoriesService {
   final AuthService _auth = AuthService();
 
 
-  CategoriesService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  CategoriesService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
-      connectTimeout: const Duration(seconds: 10),
+      connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));
 

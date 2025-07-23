@@ -54,7 +54,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   Future<void> _deleteUnverifiedUser() async {
     try {
       await _userService.deleteUnverifiedUser(widget.email);
-      print("deleted");
+      debugPrint("Unverified user deleted successfully");
     } catch (e) {
       debugPrint('Error deleting unverified user: $e');
     }
@@ -148,7 +148,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     try {
       final response = await _userService.verifyEmail(widget.email, _verificationCode);
 
-      if (response) {
+      if (response == true) {
         setState(() {
           _isVerified = true;
         });
@@ -161,7 +161,6 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
             ),
           );
           Navigator.pushReplacementNamed(context, entryPointScreenRoute);
-
         }
       } else {
         setState(() {
@@ -169,9 +168,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
         });
       }
     } catch (error) {
-      setState(() {
-        _errorMessage = '$error';
-      });
+      if (mounted) {
+        setState(() {
+          _errorMessage = error.toString();
+        });
+      }
     } finally {
       if (mounted) {
         setState(() {

@@ -27,6 +27,8 @@ class _EntryPointState extends State<EntryPoint> {
   final AuthService _auth = AuthService();
   List<Widget> _pages = [];
   int _currentIndex = 0;
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
 
   @override
   void initState() {
@@ -72,6 +74,37 @@ class _EntryPointState extends State<EntryPoint> {
   }
 
   @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _toggleSearch() {
+    setState(() {
+      _isSearching = !_isSearching;
+      if (!_isSearching) {
+        _searchController.clear();
+      }
+    });
+  }
+
+  void _performSearch(String query) {
+    if (query.trim().isNotEmpty) {
+      // Navigate to the product listing screen with search results
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ProductListingScreen(initialSearchTerm: query.trim()),
+        ),
+      );
+      _searchController.clear();
+      setState(() {
+        _isSearching = false;
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
@@ -93,20 +126,32 @@ class _EntryPointState extends State<EntryPoint> {
         leading: const SizedBox(),
         leadingWidth: 0,
         centerTitle: false,
-        title: const Text(
-          "Ahaya",
-          style: TextStyle(
-            fontSize: 25,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFF000000),
-            letterSpacing: -0.5,
-            height: 1.2,
-            fontFamily: 'Comfortaa',
-          ),
-        ),
+        title: _isSearching
+            ? TextField(
+                controller: _searchController,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search products...',
+                  border: InputBorder.none,
+                  hintStyle: TextStyle(color: Colors.grey),
+                ),
+                style: const TextStyle(color: Colors.black, fontSize: 16),
+                onSubmitted: _performSearch,
+              )
+            : const Text(
+                "Ahaya",
+                style: TextStyle(
+                  fontSize: 25,
+                  fontWeight: FontWeight.w400,
+                  color: Color(0xFF000000),
+                  letterSpacing: -0.5,
+                  height: 1.2,
+                  fontFamily: 'Comfortaa',
+                ),
+              ),
         actions: [
           IconButton(
-            onPressed: () => Navigator.pushNamed(context, discoverScreenRoute),
+            onPressed: _isSearching ? () => _performSearch(_searchController.text) : _toggleSearch,
             icon: SvgPicture.asset(
               "assets/icons/Search.svg",
               height: 24,
@@ -116,6 +161,11 @@ class _EntryPointState extends State<EntryPoint> {
               ),
             ),
           ),
+          if (_isSearching)
+            IconButton(
+              onPressed: _toggleSearch,
+              icon: const Icon(Icons.close),
+            ),
           IconButton(
             onPressed: () => Navigator.pushNamed(context, notificationsScreenRoute),
             icon: SvgPicture.asset(

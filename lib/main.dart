@@ -39,7 +39,7 @@ class MyApp extends StatelessWidget {
         builder: (context, themeProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
-            title: 'Shop Template by The Flutter Way',
+            title: 'Ahaya',
             theme: themeProvider.getTheme(context),
             // Dark theme is inclided in the Full template
             themeMode: ThemeMode.light,

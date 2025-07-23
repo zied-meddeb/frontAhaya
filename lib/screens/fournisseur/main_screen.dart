@@ -64,7 +64,7 @@ class _MainScreenState extends State<MainScreen> {
       body: Column(
         children: [
           // Header personnalisé
-          _buildHeader(context),
+
           // Contenu principal
           Expanded(
             child: _screens[_currentIndex],
@@ -76,55 +76,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
-        border: const Border(
-          bottom: BorderSide(color: Colors.grey, width: 0.5),
-        ),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            children: [
-              // Drapeau et titre
-              const Text('🇹🇳', style: TextStyle(fontSize: 32)),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ShaderMask(
-                      shaderCallback: (bounds) => SupplierTheme.blueGradient.createShader(bounds),
-                      child: const Text(
-                        'Espace Fournisseur Tunisie',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                    const Text(
-                      'Gérez vos offres et paiements',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Navigation pour écrans larges
-              if (MediaQuery.of(context).size.width > 800) _buildTabNavigation(),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildTabNavigation() {
     return Container(
@@ -200,7 +152,7 @@ class _MainScreenState extends State<MainScreen> {
           Expanded(
             child: Column(
               children: [
-                _buildHeader(context),
+
                 Expanded(child: _screens[_currentIndex]),
               ],
             ),

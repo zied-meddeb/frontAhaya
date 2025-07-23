@@ -6,7 +6,7 @@ class Promotion {
   final double prixOffre;
   final DateTime dateDebut;
   final DateTime dateFin;
-  final List<String>? produits;
+  final List<dynamic>? produits;
 
   Promotion({
     this.id,

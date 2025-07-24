@@ -4,11 +4,13 @@ import 'package:shop/models/offer.dart';
 import '../../providers/offer_provider.dart';
 import '../../models/promotion.dart';
 import '../../services/promotion_service.dart';
+import '../../services/auth_service.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/step_indicator.dart';
 import '../../widgets/gradient_button.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 
 class CreateOfferScreen extends StatefulWidget {
   const CreateOfferScreen({super.key});
@@ -32,8 +34,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   final _newProductNameController = TextEditingController();
   final _newProductPriceController = TextEditingController();
 
-  List<XFile> _selectedImages = [];
-  List<String> _imageUrls = [];
   final ImagePicker _picker = ImagePicker();
   XFile? _newProductImage;
 
@@ -55,6 +55,43 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   List<Map<String, dynamic>> _products = [];
 
   final PromotionService _promotionService = PromotionService();
+  final AuthService _authService = AuthService();
+  XFile? _afficheImage; // Main promotion image
+
+  // Helper method to display images in a web-compatible way
+  Widget _buildImageFromXFile(XFile imageFile, {required double width, required double height, BoxFit fit = BoxFit.cover}) {
+    return FutureBuilder<Uint8List>(
+      future: imageFile.readAsBytes(),
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return Image.memory(
+            snapshot.data!,
+            width: width,
+            height: height,
+            fit: fit,
+          );
+        } else if (snapshot.hasError) {
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey[200],
+            child: const Center(
+              child: Icon(Icons.error, color: Colors.red),
+            ),
+          );
+        } else {
+          return Container(
+            width: width,
+            height: height,
+            color: Colors.grey[200],
+            child: const Center(
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+      },
+    );
+  }
 
   @override
   void initState() {
@@ -64,11 +101,13 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
   Future<void> _fetchProducts() async {
     try {
-      const fournisseurId = 'your-fournisseur-id';
-      final products = await _promotionService.fetchProducts(fournisseurId);
-      setState(() {
-        _products = products;
-      });
+      final fournisseurId = await _authService.getUserId();
+      if (fournisseurId != null) {
+        final products = await _promotionService.fetchProducts(fournisseurId);
+        setState(() {
+          _products = products;
+        });
+      }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Erreur lors du chargement des produits: $e')),
@@ -77,6 +116,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   }
 
   Future<void> _pickImages() async {
+    // This method is no longer needed - removed to keep only main image picker
+  }
+
+  Future<void> _pickAfficheImage() async {
     try {
       await showModalBottomSheet(
         context: context,
@@ -97,7 +140,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   );
                   if (image != null) {
                     setState(() {
-                      _selectedImages.add(image);
+                      _afficheImage = image;
                     });
                   }
                 },
@@ -107,29 +150,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 title: const Text('Choisir dans la galerie'),
                 onTap: () async {
                   Navigator.pop(context);
-                  final List<XFile>? images = await _picker.pickMultiImage(
+                  final XFile? image = await _picker.pickImage(
+                    source: ImageSource.gallery,
                     maxWidth: 1024,
                     maxHeight: 1024,
                   );
-                  if (images != null && images.isNotEmpty) {
-                    List<XFile> validImages = [];
-                    for (var image in images) {
-                      final file = File(image.path);
-                      final sizeInBytes = await file.length();
-                      final sizeInMB = sizeInBytes / (1024 * 1024);
-                      if (sizeInMB <= 5) {
-                        validImages.add(image);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Image ${image.name} dépasse la limite de 5MB'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
+                  if (image != null) {
                     setState(() {
-                      _selectedImages.addAll(validImages);
+                      _afficheImage = image;
                     });
                   }
                 },
@@ -141,7 +169,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Erreur lors de la sélection des images: $e'),
+          content: Text('Erreur lors de la sélection de l\'image principale: $e'),
           backgroundColor: Colors.red,
         ),
       );
@@ -213,7 +241,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           'id': 'manual_${DateTime.now().millisecondsSinceEpoch}',
           'name': _newProductNameController.text,
           'price': double.parse(_newProductPriceController.text),
-          'image': _newProductImage?.path,
+          'imageFile': _newProductImage, // Store the XFile object directly
+          'image': _newProductImage?.path, // Keep path for backward compatibility
           'isManual': true,
         });
         _newProductNameController.clear();
@@ -234,7 +263,16 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   void _updateOriginalPrice() {
     final totalPrice = _selectedProducts.fold<double>(
       0,
-          (sum, product) => sum + (product['price'] as double),
+      (sum, product) {
+        // Handle both manual products and fetched products
+        if (product['isManual'] == true) {
+          return sum + (product['price'] as double);
+        } else {
+          // For fetched products, try 'prix' first, then 'price'
+          final price = product['prix'] ?? product['price'] ?? 0;
+          return sum + (price is String ? double.tryParse(price) ?? 0 : price.toDouble());
+        }
+      },
     );
     _originalPriceController.text = totalPrice.toStringAsFixed(2);
   }
@@ -268,17 +306,17 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 itemCount: _products.length,
                 itemBuilder: (context, index) {
                   final product = _products[index];
-                  final isSelected = _selectedProducts.any((p) => p['id'] == product['id']);
+                  final isSelected = _selectedProducts.any((p) => p['_id'] == product['_id']);
                   return CheckboxListTile(
-                    title: Text(product['name']),
-                    subtitle: Text('${product['price']} DT'),
+                    title: Text(product['nom'] ?? product['name'] ?? 'Produit sans nom'),
+                    subtitle: Text('${product['prix'] ?? product['price'] ?? 'Prix non défini'} DT'),
                     value: isSelected,
                     onChanged: (value) {
                       setState(() {
                         if (value == true) {
                           _selectedProducts.add(product);
                         } else {
-                          _selectedProducts.removeWhere((p) => p['id'] == product['id']);
+                          _selectedProducts.removeWhere((p) => p['_id'] == product['_id']);
                         }
                         _updateOriginalPrice();
                       });
@@ -456,76 +494,53 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     borderRadius: BorderRadius.circular(12),
                     color: Colors.blue[50],
                   ),
-                  child: _selectedImages.isEmpty
+                  child: _afficheImage == null
                       ? InkWell(
-                    onTap: _pickImages,
+                    onTap: _pickAfficheImage,
                     child: const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.cloud_upload, size: 40, color: Colors.blue),
+                          Icon(Icons.add_photo_alternate, size: 40, color: Colors.blue),
                           SizedBox(height: 8),
-                          Text('Téléchargez vos images *', style: TextStyle(fontWeight: FontWeight.w600)),
-                          Text('PNG, JPG jusqu\'à 5MB', style: TextStyle(color: Colors.grey)),
+                          Text('Ajouter l\'image principale *', style: TextStyle(fontWeight: FontWeight.w600)),
+                          Text('Cette image sera l\'affiche de votre promotion', style: TextStyle(fontSize: 12, color: Colors.grey)),
                         ],
                       ),
                     ),
                   )
-                      : ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.all(8),
-                    itemCount: _selectedImages.length + 1,
-                    itemBuilder: (context, index) {
-                      if (index == _selectedImages.length) {
-                        return InkWell(
-                          onTap: _pickImages,
-                          child: Container(
-                            width: 100,
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.blue[300]!),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.add_photo_alternate, color: Colors.blue),
-                            ),
-                          ),
-                        );
-                      }
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Stack(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(8),
-                              child: Image.file(
-                                File(_selectedImages[index].path),
-                                width: 100,
-                                height: 100,
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                            Positioned(
-                              top: 0,
-                              right: 0,
-                              child: GestureDetector(
-                                onTap: () => setState(() {
-                                  _selectedImages.removeAt(index);
-                                }),
-                                child: Container(
-                                  decoration: const BoxDecoration(
-                                    color: Colors.red,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.close, color: Colors.white, size: 16),
-                                ),
-                              ),
-                            ),
-                          ],
+                      : Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: _buildImageFromXFile(
+                          _afficheImage!,
+                          width: double.infinity,
+                          height: 120,
+                          fit: BoxFit.cover,
                         ),
-                      );
-                    },
+                      ),
+                      Positioned(
+                        top: 4,
+                        right: 4,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _afficheImage = null),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.close, color: Colors.white, size: 20),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+
+                const SizedBox(height: 16),
+
+                // Additional images section removed to keep only main promotion image
               ],
             ),
           ),
@@ -723,8 +738,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(_newProductImage!.path),
+                        child: _buildImageFromXFile(
+                          _newProductImage!,
                           width: double.infinity,
                           height: 100,
                           fit: BoxFit.cover,
@@ -800,21 +815,29 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                   ),
                                   child: Column(
                                     children: [
-                                      if (product['image'] != null)
+                                      if (product['image'] != null || product['imageUrl'] != null || product['imageFile'] != null)
                                         ClipRRect(
                                           borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
-                                          child: product['isManual'] == true
-                                              ? Image.file(
-                                            File(product['image']),
-                                            height: 60,
-                                            width: 100,
-                                            fit: BoxFit.cover,
-                                          )
+                                          child: product['isManual'] == true && product['imageFile'] != null
+                                              ? _buildImageFromXFile(
+                                                  product['imageFile'] as XFile,
+                                                  width: 100,
+                                                  height: 60,
+                                                  fit: BoxFit.cover,
+                                                )
                                               : Image.network(
-                                            product['image'],
+                                            product['imageUrl'] ?? product['image'] ?? 'https://example.com/default.jpg',
                                             height: 60,
                                             width: 100,
                                             fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) => Container(
+                                              height: 60,
+                                              width: 100,
+                                              color: Colors.grey[200],
+                                              child: const Center(
+                                                child: Icon(Icons.image_not_supported, color: Colors.grey),
+                                              ),
+                                            ),
                                           ),
                                         )
                                       else
@@ -829,7 +852,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                       Padding(
                                         padding: const EdgeInsets.all(4),
                                         child: Text(
-                                          product['name'],
+                                          product['name'] ?? product['nom'] ?? 'Produit',
                                           style: const TextStyle(fontSize: 12),
                                           overflow: TextOverflow.ellipsis,
                                         ),
@@ -1057,14 +1080,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
               const SizedBox(height: 16),
 
-              _buildDateField(
-                "Fin de l'affiche *",
-                _promotionEndDate,
-                    (date) => setState(() => _promotionEndDate = date),
-              ),
-
-              const SizedBox(height: 16),
-
               TextFormField(
                 controller: _videoLinkController,
                 decoration: const InputDecoration(
@@ -1207,7 +1222,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       case 0:
         return _selectedType.isNotEmpty &&
             _descriptionController.text.isNotEmpty &&
-            _selectedImages.isNotEmpty;
+            _afficheImage != null;
       case 1:
         return _selectedCountry.isNotEmpty &&
             _selectedRegion.isNotEmpty &&
@@ -1241,19 +1256,80 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     setState(() => _isSubmitting = true);
 
     try {
-      final promotion = Promotion(
+      // Get the current fournisseur ID
+      final fournisseurId = await _authService.getUserId();
+      if (fournisseurId == null) {
+        throw Exception('Utilisateur non connecté');
+      }
+
+      // Validate required fields
+      if (_afficheImage == null) {
+        throw Exception('L\'image principale est requise');
+      }
+
+      if (_selectedProducts.isEmpty) {
+        throw Exception('Au moins un produit doit être sélectionné');
+      }
+
+      if (_promotionStartDate == null || _promotionEndDate == null) {
+        throw Exception('Les dates de début et fin sont requises');
+      }
+
+      // Prepare products data according to backend schema
+      final List<Map<String, dynamic>> productsData = _selectedProducts.map((product) {
+        if (product['isManual'] == true) {
+          // Manual product - create new product data according to IProduit schema
+          return {
+            'nom': product['name'],
+            'description': 'Produit ajouté pour la promotion: ${product['name']}',
+            'imageUrl': 'https://example.com/default.jpg', // Will be handled by backend
+            'verified': false,
+            'views': 0,
+            'tags': [_selectedType.toLowerCase()],
+            'category': '68444d2c959b8ca2a774bf55', // Default category ID - you might want to make this dynamic
+            'fournisseur': fournisseurId,
+          };
+        } else {
+          // Existing product - ensure it has all required fields
+          return {
+            'nom': product['nom'] ?? product['name'],
+            'description': product['description'] ?? product['nom'] ?? product['name'],
+            'imageUrl': product['imageUrl'] ?? product['image'],
+            'verified': product['verified'] ?? false,
+            'views': product['views'] ?? 0,
+            'tags': product['tags'] ?? [_selectedType.toLowerCase()],
+            'category': product['category'],
+            'fournisseur': product['fournisseur'] ?? fournisseurId,
+          };
+        }
+      }).toList();
+
+      // Create the full location string (for potential future use)
+      final location = '${_locationController.text}, $_selectedRegion, $_selectedCountry';
+      
+      // Debug: Print the data being sent
+      print('Creating promotion with:');
+      print('Type: $_selectedType');
+      print('Description: ${_descriptionController.text}');
+      print('Products count: ${productsData.length}');
+      print('Location: $location');
+      print('Original price: ${_originalPriceController.text}');
+      print('Promotional price: ${_promotionalPriceController.text}');
+
+      final createdPromotion = await _promotionService.createPromotion(
         type: _selectedType,
         description: _descriptionController.text,
         prixOriginal: double.parse(_originalPriceController.text),
         prixOffre: double.parse(_promotionalPriceController.text),
         dateDebut: _promotionStartDate!,
         dateFin: _promotionEndDate!,
-        produits: _selectedProducts.map((p) => p['id']).toList(),
+        fournisseurId: fournisseurId,
+        statut: 'ATT_VER', // En attente de vérification
+        produits: productsData,
+        afficheImage: _afficheImage,
       );
 
-      final createdPromotion = await _promotionService.createPromotion(promotion);
-
-      await context.read<OfferProvider>().addOffer(createdPromotion as Offer);
+      print('Promotion created successfully: ${createdPromotion.id}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1273,13 +1349,47 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         );
 
         _resetForm();
+        
+        // Navigate back to the previous screen after a short delay
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            Navigator.of(context).pop();
+          }
+        });
       }
     } catch (e) {
+      print('Error creating promotion: $e');
       if (mounted) {
+        String errorMessage = 'Erreur lors de la création de la promotion';
+        
+        // Provide more specific error messages based on the error type
+        if (e.toString().contains('network') || e.toString().contains('connection')) {
+          errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
+        } else if (e.toString().contains('validation')) {
+          errorMessage = 'Erreur de validation des données. Vérifiez les informations saisies.';
+        } else if (e.toString().contains('unauthorized') || e.toString().contains('401')) {
+          errorMessage = 'Session expirée. Veuillez vous reconnecter.';
+        } else if (e.toString().contains('file') || e.toString().contains('image')) {
+          errorMessage = 'Erreur lors du téléchargement de l\'image. Réessayez avec une autre image.';
+        }
+        
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Erreur lors de la création de la promotion: $e'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(errorMessage, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text('Détails: ${e.toString()}'),
+              ],
+            ),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 6),
+            action: SnackBarAction(
+              label: 'Réessayer',
+              textColor: Colors.white,
+              onPressed: () => _submitOffer(),
+            ),
           ),
         );
       }
@@ -1306,9 +1416,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       _promotionStartDate = null;
       _promotionEndDate = null;
       _selectedProducts = [];
-      _selectedImages = [];
-      _imageUrls = [];
       _newProductImage = null;
+      _afficheImage = null;
       _currentStep = 0;
     });
 

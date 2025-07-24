@@ -33,7 +33,7 @@ class SupplierTheme {
       elevation: 0,
       centerTitle: false,
     ),
-    cardTheme: CardThemeData(
+    cardTheme: CardTheme(
       elevation: 4,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),

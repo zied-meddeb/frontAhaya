@@ -37,14 +37,18 @@ class PromotionService {
     required double prixOffre,
     required DateTime dateDebut,
     required DateTime dateFin,
+    DateTime? dateAffiche,
     required String fournisseurId,
     required String statut,
     required List<Map<String, dynamic>> produits,
-    XFile? afficheImage,
+    List<XFile>? afficheImages,
+    List<XFile>? productImages, // Add product images parameter
   }) async {
     try {
+      print('PromotionService: Creating promotion with ${productImages?.length ?? 0} product images');
+      
       // Create FormData for multipart request
-      FormData formData = FormData.fromMap({
+      Map<String, dynamic> formFields = {
         'type': type,
         'description': description,
         'prix_original': prixOriginal,
@@ -53,35 +57,86 @@ class PromotionService {
         'date_fin': dateFin.toIso8601String(),
         'Fournisseur': fournisseurId,
         'statut': statut,
-        'produits': jsonEncode(produits),
-      });
+        'produits': jsonEncode(produits), 
+      };
 
-      // Add image if provided
-      if (afficheImage != null) {
-        if (kIsWeb) {
-          // For web platform, read bytes directly
-          final bytes = await afficheImage.readAsBytes();
-          formData.files.add(MapEntry(
-            'affiche',
-            MultipartFile.fromBytes(
-              bytes,
-              filename: afficheImage.name,
-            ),
-          ));
-        } else {
-          // For mobile platforms, use fromFile
-          formData.files.add(MapEntry(
-            'affiche',
-            await MultipartFile.fromFile(
-              afficheImage.path,
-              filename: afficheImage.name,
-            ),
-          ));
+      // Add dateAffiche only if provided
+      if (dateAffiche != null) {
+        formFields['date_affiche'] = dateAffiche.toIso8601String();
+      }
+
+      FormData formData = FormData.fromMap(formFields);
+
+      // Add multiple images if provided
+      if (afficheImages != null && afficheImages.isNotEmpty) {
+        for (int i = 0; i < afficheImages.length; i++) {
+          final image = afficheImages[i];
+          if (kIsWeb) {
+            // For web platform, read bytes directly
+            final bytes = await image.readAsBytes();
+            formData.files.add(MapEntry(
+              'affiches', // Backend expects 'affiches' for multiple files
+              MultipartFile.fromBytes(
+                bytes,
+                filename: image.name,
+              ),
+            ));
+          } else {
+            // For mobile platforms, use fromFile
+            formData.files.add(MapEntry(
+              'affiches',
+              await MultipartFile.fromFile(
+                image.path,
+                filename: image.name,
+              ),
+            ));
+          }
         }
       }
 
+      // Add product images if provided
+      if (productImages != null && productImages.isNotEmpty) {
+        print('PromotionService: Adding ${productImages.length} product images to FormData');
+        for (int i = 0; i < productImages.length; i++) {
+          final image = productImages[i];
+          print('PromotionService: Adding product image ${i + 1}: ${image.name}');
+          if (kIsWeb) {
+            // For web platform, read bytes directly
+            final bytes = await image.readAsBytes();
+            print('PromotionService: Web - Adding product image bytes (${bytes.length} bytes)');
+            formData.files.add(MapEntry(
+              'productImages', // Backend expects 'productImages' for product images
+              MultipartFile.fromBytes(
+                bytes,
+                filename: image.name,
+              ),
+            ));
+          } else {
+            // For mobile platforms, use fromFile
+            print('PromotionService: Mobile - Adding product image from file path: ${image.path}');
+            formData.files.add(MapEntry(
+              'productImages',
+              await MultipartFile.fromFile(
+                image.path,
+                filename: image.name,
+              ),
+            ));
+          }
+        }
+      } else {
+        print('PromotionService: No product images provided or list is empty');
+        print('PromotionService: productImages == null: ${productImages == null}');
+        print('PromotionService: productImages isEmpty: ${productImages?.isEmpty}');
+      }
+
+      print('PromotionService: Final FormData files count: ${formData.files.length}');
+      print('PromotionService: FormData files:');
+      for (var file in formData.files) {
+        print('  - ${file.key}: ${file.value.filename}');
+      }
+
       final response = await dio.post(
-        '/promotion',
+        '/promotion/',
         data: formData,
         options: Options(
           contentType: 'multipart/form-data',
@@ -101,8 +156,7 @@ class PromotionService {
   Future<List<Map<String, dynamic>>> fetchProducts(String fournisseurId) async {
     try {
       final response = await dio.get(
-        '/produit',
-        queryParameters: {'fournisseur': fournisseurId},
+        '/produit/byfournisseur/$fournisseurId',
       );
 
       if (response.statusCode == 200) {
@@ -115,4 +169,6 @@ class PromotionService {
       throw Exception('Error fetching products: $e');
     }
   }
+
+  
 }

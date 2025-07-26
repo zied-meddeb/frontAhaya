@@ -2,33 +2,36 @@ class Promotion {
   final String? id;
   final String? fournisseur;
   final String type;
-  final List<String>? afficheUrls;
+  final List<String> afficheUrls;
   final String description;
   final double prixOriginal;
   final double prixOffre;
   final DateTime dateDebut;
   final DateTime dateFin;
   final DateTime? dateAffiche;
-  final List<String>? produits;
+  final List<dynamic>? produits;
   final String? statut;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+  final String titre;
 
   Promotion({
     this.id,
     this.fournisseur,
     required this.type,
-    this.afficheUrls,
+    required this.afficheUrls,
     required this.description,
     required this.prixOriginal,
     required this.prixOffre,
     required this.dateDebut,
     required this.dateFin,
+    required this.titre,
     this.dateAffiche,
     this.produits,
     this.statut,
     this.createdAt,
     this.updatedAt,
+
   });
 
   factory Promotion.fromJson(Map<String, dynamic> json) {
@@ -36,9 +39,8 @@ class Promotion {
       id: json['_id'],
       fournisseur: json['Fournisseur'],
       type: json['type'],
-      afficheUrls: json['afficheUrls'] != null 
-          ? List<String>.from(json['afficheUrls']) 
-          : null,
+      afficheUrls:  List<String>.from(json['afficheUrls'])
+          ,
       description: json['description'],
       prixOriginal: (json['prix_original'] ?? 0).toDouble(),
       prixOffre: (json['prix_offre'] ?? 0).toDouble(),
@@ -51,8 +53,31 @@ class Promotion {
       statut: json['statut'],
       createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
       updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+      titre: json['titre']
     );
   }
+
+  factory Promotion.fromJson2(Map<String, dynamic> json) {
+    return Promotion(
+        id: json['_id'],
+        fournisseur: json['Fournisseur'],
+        type: json['type'],
+        afficheUrls:  List<String>.from(json['afficheUrls'])
+        ,
+        description: json['description'],
+        prixOriginal: (json['prix_original'] ?? 0).toDouble(),
+        prixOffre: (json['prix_offre'] ?? 0).toDouble(),
+        dateDebut: DateTime.parse(json['date_debut']),
+        dateFin: DateTime.parse(json['date_fin']),
+        dateAffiche: json['date_affiche'] != null ? DateTime.parse(json['date_affiche']) : null,
+        produits:  List<Map<String, dynamic>>.from(json['produits']),
+        statut: json['statut'],
+        createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
+        updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : null,
+        titre: json['titre']
+    );
+  }
+
 
   Map<String, dynamic> toJson() {
     return {
@@ -70,6 +95,7 @@ class Promotion {
       if (statut != null) 'statut': statut,
       if (createdAt != null) 'createdAt': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updatedAt': updatedAt!.toIso8601String(),
+      'titre':titre
     };
   }
 }

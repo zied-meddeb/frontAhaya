@@ -13,7 +13,7 @@ class PromotionService {
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
+  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -32,6 +32,7 @@ class PromotionService {
 
   Future<Promotion> createPromotion({
     required String type,
+    required String titre,
     required String description,
     required double prixOriginal,
     required double prixOffre,
@@ -50,6 +51,7 @@ class PromotionService {
       // Create FormData for multipart request
       Map<String, dynamic> formFields = {
         'type': type,
+        'titre': titre,
         'description': description,
         'prix_original': prixOriginal,
         'prix_offre': prixOffre,
@@ -134,7 +136,7 @@ class PromotionService {
       for (var file in formData.files) {
         print('  - ${file.key}: ${file.value.filename}');
       }
-
+      print("form dataaaaa: ${formData.fields}");
       final response = await dio.post(
         '/promotion/',
         data: formData,
@@ -170,5 +172,121 @@ class PromotionService {
     }
   }
 
-  
+  Future<List<Map<String, dynamic>>> fetchPromotionsByFournisseurId(String fournisseurId) async {
+    try {
+      final response = await dio.get(
+        '/promotion/fournisseur/$fournisseurId',
+      );
+      if (response.statusCode == 200) {
+        final List<dynamic> promotions = response.data['data'] ?? [];
+        return promotions.cast<Map<String, dynamic>>();
+      } else {
+        throw Exception('Failed to fetch promotions: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching promotions: $e');
+    }
+  }
+
+  Future<Map<String, dynamic>> fetchPromotionById(String? id) async {
+    try {
+      final response = await dio.get(
+        '/promotion/$id',
+      );
+      if (response.statusCode == 200) {
+        final  promotion = response.data['data'] ?? [];
+        return promotion;
+      } else {
+        throw Exception('Failed to fetch promotions: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching promotions: $e');
+    }
+  }
+
+  Future<Promotion> updatePromotion({
+    required String promotionId,
+    required String type,
+    required String titre,
+    required String description,
+    required double prixOriginal,
+    required double prixOffre,
+    required DateTime dateDebut,
+    required DateTime dateFin,
+    DateTime? dateAffiche,
+    required String fournisseurId,
+    required String statut,
+    required List<Map<String, dynamic>> produits,
+    List<XFile>? afficheImages,
+    List<XFile>? productImages,
+    required List<String> existingAfficheUrls,
+  }) async {
+    try {
+      // Validate we have at least one image (existing or new)
+      if ((afficheImages == null || afficheImages.isEmpty) &&
+          (existingAfficheUrls.isEmpty)) {
+        throw Exception('At least one promotion image is required (either existing or new)');
+      }
+
+      // Create FormData
+      final formData = FormData.fromMap({
+        'type': type,
+        'titre': titre,
+        'description': description,
+        'prix_original': prixOriginal.toString(),
+        'prix_offre': prixOffre.toString(),
+        'date_debut': dateDebut.toIso8601String(),
+        'date_fin': dateFin.toIso8601String(),
+        'Fournisseur': fournisseurId,
+        'statut': statut,
+        'produits': jsonEncode(produits),
+        'existingAfficheUrls': jsonEncode(existingAfficheUrls),
+        if (dateAffiche != null) 'date_affiche': dateAffiche.toIso8601String(),
+      });
+
+      // Add affiche images if any
+      if (afficheImages != null && afficheImages.isNotEmpty) {
+        for (final image in afficheImages) {
+          final file = await MultipartFile.fromFile(
+            image.path,
+            filename: image.name,
+          );
+          formData.files.add(MapEntry('affiches', file));
+        }
+      }
+
+      // Add product images if any
+      if (productImages != null && productImages.isNotEmpty) {
+        for (final image in productImages) {
+          final file = await MultipartFile.fromFile(
+            image.path,
+            filename: image.name,
+          );
+          formData.files.add(MapEntry('productImages', file));
+        }
+      }
+
+      final response = await dio.post(
+        '/promotion/$promotionId',
+        data: formData,
+        options: Options(
+          contentType: 'multipart/form-data',
+        ),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        return Promotion.fromJson(response.data['data']);
+      } else {
+        throw Exception('Failed to update promotion: ${response.statusCode} - ${response.statusMessage}');
+      }
+    } on DioException catch (e) {
+      if (e.response != null) {
+        throw Exception('Failed to update promotion: ${e.response?.statusCode} - ${e.response?.data}');
+      } else {
+        throw Exception('Failed to update promotion: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Error updating promotion: $e');
+    }
+  }
 }

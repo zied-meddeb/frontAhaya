@@ -6,7 +6,7 @@ import 'dio_interceptor.dart';
 class UserService {
   final String baseUrl;
   late final Dio dio;
-  UserService({this.baseUrl = 'http://10.0.2.2:3100/api'}){
+  UserService({this.baseUrl = 'http://localhost:3100/api'}){
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),

@@ -13,7 +13,7 @@ class PromotionService {
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -174,8 +174,15 @@ class PromotionService {
 
   Future<List<Map<String, dynamic>>> fetchPromotionsByFournisseurId(String fournisseurId) async {
     try {
+      final token = await _auth.getAuthToken();
+      print('Fetching promotions for fournisseurId: $fournisseurId with token: $token');
       final response = await dio.get(
         '/promotion/fournisseur/$fournisseurId',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+          },
+        ),
       );
       if (response.statusCode == 200) {
         final List<dynamic> promotions = response.data['data'] ?? [];
@@ -247,10 +254,19 @@ class PromotionService {
       // Add affiche images if any
       if (afficheImages != null && afficheImages.isNotEmpty) {
         for (final image in afficheImages) {
-          final file = await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
-          );
+          MultipartFile file;
+          if (kIsWeb) {
+            final bytes = await image.readAsBytes();
+            file = MultipartFile.fromBytes(
+              bytes,
+              filename: image.name,
+            );
+          } else {
+            file = await MultipartFile.fromFile(
+              image.path,
+              filename: image.name,
+            );
+          }
           formData.files.add(MapEntry('affiches', file));
         }
       }
@@ -258,10 +274,19 @@ class PromotionService {
       // Add product images if any
       if (productImages != null && productImages.isNotEmpty) {
         for (final image in productImages) {
-          final file = await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
-          );
+          MultipartFile file;
+          if (kIsWeb) {
+            final bytes = await image.readAsBytes();
+            file = MultipartFile.fromBytes(
+              bytes,
+              filename: image.name,
+            );
+          } else {
+            file = await MultipartFile.fromFile(
+              image.path,
+              filename: image.name,
+            );
+          }
           formData.files.add(MapEntry('productImages', file));
         }
       }
@@ -275,7 +300,15 @@ class PromotionService {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return Promotion.fromJson(response.data['data']);
+        print('Promotion updated successfully: ${response.data}');
+        final responseData = response.data;
+        if (responseData['data'] != null && responseData['data']['data'] != null) {
+          return Promotion.fromJson(responseData['data']['data']);
+        } else if (responseData['data'] != null) {
+          return Promotion.fromJson(responseData['data']);
+        } else {
+          return Promotion.fromJson(responseData);
+        }
       } else {
         throw Exception('Failed to update promotion: ${response.statusCode} - ${response.statusMessage}');
       }
@@ -286,7 +319,7 @@ class PromotionService {
         throw Exception('Failed to update promotion: ${e.message}');
       }
     } catch (e) {
-      throw Exception('Error updating promotion: $e');
+      throw Exception('Error updating promotion: $e - ${e.toString()} - ${e.runtimeType}');
     }
   }
 }

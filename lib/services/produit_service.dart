@@ -9,7 +9,7 @@ class ProductService {
   final AuthService _auth = AuthService();
 
   // Constructor with optional baseUrl parameter for flexibility
-  ProductService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  ProductService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),

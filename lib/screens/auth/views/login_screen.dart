@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shop/services/fournisseur_service.dart';
 import 'package:shop/services/user_service.dart' hide AuthException;
-import 'package:url_launcher/url_launcher.dart';
+
 import 'dart:math' as math;
 
 import '../../../route/route_constants.dart';
 import '../../../services/auth_service.dart';
+import '../../../constants.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -83,14 +84,7 @@ class _LoginScreenState extends State<LoginScreen>
     });
   }
 
-  Future<void> _launchUrl(String url) async {
-    final Uri uri = Uri.parse(url);
-    if (!await launchUrl(uri)) {
-      if (kDebugMode) {
-        print('Could not launch $url');
-      }
-    }
-  }
+
 
   final AuthService _auth = AuthService();
   final UserService _userService = UserService();
@@ -109,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez remplir tous les champs'),
-          backgroundColor: Colors.orange,
+          backgroundColor: warningColor,
           duration: Duration(seconds: 2),
         ),
       );
@@ -140,7 +134,7 @@ class _LoginScreenState extends State<LoginScreen>
             content: Text(_activeTab == 'utilisateur'
                 ? 'Connexion utilisateur réussie'
                 : 'Connexion partenaire réussie'),
-            backgroundColor: Colors.green,
+            backgroundColor: successColor,
             duration: Duration(seconds: 2),
           ),
         );
@@ -158,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(e.message),
-          backgroundColor: Colors.red,
+          backgroundColor: errorColor,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -170,7 +164,7 @@ class _LoginScreenState extends State<LoginScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Une erreur inattendue est survenue'),
-          backgroundColor: Colors.red,
+          backgroundColor: errorColor,
           duration: Duration(seconds: 2),
         ),
       );

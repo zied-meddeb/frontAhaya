@@ -4,6 +4,7 @@ import '../../../models/user_profile.dart';
 import 'components/privacy_tab.dart';
 import 'components/profile_header.dart';
 import 'components/profile_info_tab.dart';
+import '../../../constants.dart';
 
 
 class ProfileDetailScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
   bool _isEditing = false;
 
   late UserProfile _profile;
-  late NotificationSettings _notifications;
+
   late PrivacySettings _privacy;
   late PromoPreferences _promoPrefs;
 
@@ -38,11 +39,7 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
 
     );
 
-    _notifications = NotificationSettings(
-      email: true,
-      push: true,
-      sms: false,
-    );
+
 
     _privacy = PrivacySettings(
       profilePublic: true,
@@ -140,9 +137,9 @@ class _ProfileDetailScreenState extends State<ProfileDetailScreen>
                             Tab(text: 'Mon Profil'),
                             Tab(text: 'Confidentialité'),
                           ],
-                          labelColor: Colors.blue,
-                          unselectedLabelColor: Colors.grey,
-                          indicatorColor: Colors.blue,
+                          labelColor: primaryColor,
+                          unselectedLabelColor: blackColor40,
+                          indicatorColor: primaryColor,
                         ),
                         SizedBox(
                           height: 600,

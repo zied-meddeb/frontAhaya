@@ -106,7 +106,7 @@ class Promotion {
       if (id != null) '_id': id,
       if (fournisseur != null) 'Fournisseur': fournisseur,
       'type': type,
-      if (afficheUrls != null) 'afficheUrls': afficheUrls,
+      'afficheUrls': afficheUrls,
       'description': description,
       'prix_original': prixOriginal,
       'prix_offre': prixOffre,

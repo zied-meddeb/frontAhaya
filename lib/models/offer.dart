@@ -193,15 +193,15 @@ extension OfferStatusExtension on OfferStatus {
   Color get color {
     switch (this) {
       case OfferStatus.draft:
-        return Colors.amber;
+        return const Color(0xFF424242);
       case OfferStatus.pendingValidation:
-        return Colors.blue;
+        return const Color(0xFF000000);
       case OfferStatus.active:
-        return Colors.green;
+        return const Color(0xFF000000);
       case OfferStatus.rejected:
-        return Colors.red;
+        return const Color(0xFF757575);
       case OfferStatus.expired:
-        return Colors.grey;
+        return const Color(0xFF9E9E9E);
     }
   }
 

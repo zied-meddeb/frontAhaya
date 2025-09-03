@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shop/constants.dart';
-import 'package:shop/screens/search/views/components/search_form.dart';
+
 import '../../../models/product_model.dart';
 import '../../../route/route_constants.dart';
 import '../../../services/produit_service.dart';
@@ -191,7 +191,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         '${product.price.toStringAsFixed(2)} DT',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: Colors.blue[700],
+                                          color: primaryColor,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -200,7 +200,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                                         '${product.priceAfetDiscount!.toStringAsFixed(2)} DT',
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: Colors.grey[600],
+                                          color: blackColor40,
                                           decoration: TextDecoration.lineThrough,
                                         ),
                                       ),

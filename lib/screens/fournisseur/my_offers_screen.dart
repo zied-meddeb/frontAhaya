@@ -112,9 +112,11 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
                           )),
                         ],
                         onChanged: (value) {
-                          setState(() {
-                            _selectedStatus = value;
-                          });
+                          if (value != _selectedStatus) {
+                            setState(() {
+                              _selectedStatus = value;
+                            });
+                          }
                         },
                       ),
                     ),
@@ -190,11 +192,11 @@ class _MyOffersScreenState extends State<MyOffersScreen> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  promotion.afficheUrls != null && promotion.afficheUrls!.isNotEmpty
+                  promotion.afficheUrls.isNotEmpty
                       ? ClipRRect(
                     borderRadius: BorderRadius.circular(8),
                     child: Image.network(
-                      promotion.afficheUrls!.first,
+                      promotion.afficheUrls.first,
                       width: 100,
                       height: 100,
                       fit: BoxFit.cover,

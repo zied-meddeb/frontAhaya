@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shop/route/screen_export.dart';
-import 'package:shop/screens/discover/views/product.dart';
+
 import '../../../models/product_model.dart';
 import '../../../route/route_constants.dart';
 import '../../../services/auth_service.dart';
@@ -235,7 +235,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
         final favorites = await _favoritesService.fetchFavorites(userId);
         if (mounted) {
           setState(() {
-            favoriteProductIds = favorites.map((product) => product.id ?? '').where((id) => id.isNotEmpty).toList();
+            favoriteProductIds = favorites.map((product) => product.id).where((id) => id.isNotEmpty).toList();
           });
         }
       }
@@ -321,13 +321,7 @@ class _ProductListingScreenState extends State<ProductListingScreen> {
     });
   }
 
-  void _updateCategoryCounts() {
-    setState(() {
-      for (var category in categories) {
-        category['count'] = _getProductCountForCategory(category['id']);
-      }
-    });
-  }  void _showDiscountModal() {
+  void _showDiscountModal() {
     if (!mounted) return;
     showDialog(
       context: context,

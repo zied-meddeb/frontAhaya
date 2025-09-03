@@ -78,55 +78,14 @@ class _MainScreenState extends State<MainScreen> {
 
 
 
-  Widget _buildTabNavigation() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(25),
-      ),
-      padding: const EdgeInsets.all(4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: _destinations.asMap().entries.map((entry) {
-          final index = entry.key;
-          final destination = entry.value;
-          final isSelected = _currentIndex == index;
-          
-          return GestureDetector(
-            onTap: () => setState(() => _currentIndex = index),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected ? Colors.white : Colors.transparent,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: isSelected ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ] : null,
-              ),
-              child: Text(
-                destination.label,
-                style: TextStyle(
-                  color: isSelected ? SupplierTheme.blueGradientStart : Colors.grey[600],
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ),
-          );
-        }).toList(),
-      ),
-    );
-  }
+
 
   Widget _buildBottomNavigation() {
     return NavigationBar(
       selectedIndex: _currentIndex,
       onDestinationSelected: (index) => setState(() => _currentIndex = index),
       destinations: _destinations,
-      backgroundColor: Colors.white,
+      backgroundColor: SupplierTheme.primaryWhite,
       elevation: 8,
     );
   }
@@ -145,7 +104,7 @@ class _MainScreenState extends State<MainScreen> {
               selectedIcon: dest.selectedIcon,
               label: Text(dest.label),
             )).toList(),
-            backgroundColor: Colors.grey[50],
+            backgroundColor: SupplierTheme.lightGray,
           ),
           const VerticalDivider(thickness: 1, width: 1),
           // Contenu principal

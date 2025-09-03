@@ -23,7 +23,7 @@ class ValidationStatusWidget extends StatelessWidget {
         // Offres en attente
         if (pendingOffers.isNotEmpty) ...[
           Card(
-            color: Colors.blue[50],
+            color: const Color(0xFFF5F5F5),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -31,13 +31,13 @@ class ValidationStatusWidget extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.hourglass_empty, color: Colors.blue[700]),
+                      Icon(Icons.hourglass_empty, color: const Color(0xFF000000)),
                       const SizedBox(width: 8),
                       Text(
                         'Offres en attente de validation (${pendingOffers.length})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.blue[800],
+                          color: const Color(0xFF000000),
                         ),
                       ),
                     ],
@@ -50,7 +50,7 @@ class ValidationStatusWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.blue[200]!),
+                        border: Border.all(color: const Color(0xFFE0E0E0)),
                       ),
                       child: Row(
                         children: [
@@ -66,7 +66,7 @@ class ValidationStatusWidget extends StatelessWidget {
                                   'Soumise le ${_formatDate(offer.submittedAt!)}',
                                   style: const TextStyle(
                                     fontSize: 12,
-                                    color: Colors.grey,
+                                    color: const Color(0xFF9E9E9E),
                                   ),
                                 ),
                               ],
@@ -75,19 +75,19 @@ class ValidationStatusWidget extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.blue[100],
+                              color: const Color(0xFFF5F5F5),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.hourglass_empty, size: 12, color: Colors.blue),
+                                Icon(Icons.hourglass_empty, size: 12, color: const Color(0xFF000000)),
                                 SizedBox(width: 4),
                                 Text(
                                   'En validation',
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: Colors.blue,
+                                    color: const Color(0xFF000000),
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -103,7 +103,7 @@ class ValidationStatusWidget extends StatelessWidget {
                       '+${pendingOffers.length - 3} autres offres en attente...',
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.blue[600],
+                        color: const Color(0xFF424242),
                         fontStyle: FontStyle.italic,
                       ),
                     ),
@@ -111,19 +111,19 @@ class ValidationStatusWidget extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.blue[100],
+                      color: const Color(0xFFF5F5F5),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
                       children: [
-                        Icon(Icons.info, size: 16, color: Colors.blue[800]),
+                        Icon(Icons.info, size: 16, color: const Color(0xFF000000)),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'Temps de validation habituel : 24-48 heures ouvrables',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.blue[800],
+                              color: const Color(0xFF000000),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -141,7 +141,7 @@ class ValidationStatusWidget extends StatelessWidget {
         // Offres rejetées
         if (rejectedOffers.isNotEmpty) ...[
           Card(
-            color: Colors.red[50],
+            color: const Color(0xFFF5F5F5),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
@@ -149,13 +149,13 @@ class ValidationStatusWidget extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.cancel, color: Colors.red[700]),
+                      Icon(Icons.cancel, color: const Color(0xFF757575)),
                       const SizedBox(width: 8),
                       Text(
                         'Offres rejetées (${rejectedOffers.length})',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.red[800],
+                          color: const Color(0xFF757575),
                         ),
                       ),
                     ],
@@ -168,7 +168,7 @@ class ValidationStatusWidget extends StatelessWidget {
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[200]!),
+                        border: Border.all(color: const Color(0xFFE0E0E0)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,19 +184,19 @@ class ValidationStatusWidget extends StatelessWidget {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: Colors.red[100],
+                                  color: const Color(0xFFF5F5F5),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: const Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    Icon(Icons.cancel, size: 12, color: Colors.red),
+                                    Icon(Icons.cancel, size: 12, color: const Color(0xFF757575)),
                                     SizedBox(width: 4),
                                     Text(
                                       'Rejetée',
                                       style: TextStyle(
                                         fontSize: 10,
-                                        color: Colors.red,
+                                        color: const Color(0xFF757575),
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -210,7 +210,7 @@ class ValidationStatusWidget extends StatelessWidget {
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: Colors.red[50],
+                                color: const Color(0xFFF5F5F5),
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Column(
@@ -228,7 +228,7 @@ class ValidationStatusWidget extends StatelessWidget {
                                     offer.rejectionReason!,
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.red[700],
+                                      color: const Color(0xFF757575),
                                     ),
                                   ),
                                 ],
@@ -243,7 +243,7 @@ class ValidationStatusWidget extends StatelessWidget {
                                 'Rejetée le ${_formatDate(offer.validatedAt!)}',
                                 style: const TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: const Color(0xFF9E9E9E),
                                 ),
                               ),
                               TextButton.icon(
@@ -251,7 +251,7 @@ class ValidationStatusWidget extends StatelessWidget {
                                 icon: const Icon(Icons.edit, size: 12),
                                 label: const Text('Modifier', style: TextStyle(fontSize: 12)),
                                 style: TextButton.styleFrom(
-                                  foregroundColor: Colors.blue,
+                                  foregroundColor: const Color(0xFF000000),
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                 ),
                               ),

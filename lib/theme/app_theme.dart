@@ -9,39 +9,45 @@ import 'theme_data.dart';
 
 
 class SupplierTheme {
-  // Couleurs principales pour la Tunisie
-  static const Color primaryRed = Color(0xFFE70013);
+  // Black and white theme colors
+  static const Color primaryBlack = Color(0xFF000000);
   static const Color primaryWhite = Color(0xFFFFFFFF);
-  static const Color tunisianGreen = Color(0xFF00A651);
-  static const Color goldAccent = Color(0xFFFFD700);
+  static const Color lightGray = Color(0xFFF5F5F5);
+  static const Color mediumGray = Color(0xFF9E9E9E);
+  static const Color darkGray = Color(0xFF424242);
 
-  // Couleurs de l'interface
-  static const Color blueGradientStart = Color(0xFF3B82F6);
-  static const Color blueGradientEnd = Color(0xFF8B5CF6);
-  static const Color emeraldColor = Color(0xFF10B981);
-  static const Color orangeColor = Color(0xFFF97316);
+  // Interface colors for black and white theme
+  static const Color blackGradientStart = Color(0xFF000000);
+  static const Color blackGradientEnd = Color(0xFF424242);
+  static const Color whiteGradientStart = Color(0xFFFFFFFF);
+  static const Color whiteGradientEnd = Color(0xFFF5F5F5);
+  static const Color grayAccent = Color(0xFF757575);
 
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: blueGradientStart,
+      seedColor: primaryBlack,
       brightness: Brightness.light,
     ),
     appBarTheme: const AppBarTheme(
-      backgroundColor: Colors.white,
-      foregroundColor: Colors.black87,
+      backgroundColor: primaryWhite,
+      foregroundColor: primaryBlack,
       elevation: 0,
       centerTitle: false,
     ),
     //CardThemeData
-    cardTheme: CardTheme(
+    cardTheme: CardThemeData(
       elevation: 4,
+      color: primaryWhite,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: mediumGray, width: 1),
       ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
+        backgroundColor: primaryBlack,
+        foregroundColor: primaryWhite,
         elevation: 2,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(
@@ -50,13 +56,13 @@ class SupplierTheme {
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
-      border: OutlineInputBorder(
+      enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Colors.grey, width: 2),
+        borderSide: const BorderSide(color: mediumGray, width: 2),
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: blueGradientStart, width: 2),
+        borderSide: const BorderSide(color: primaryBlack, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     ),
@@ -65,26 +71,51 @@ class SupplierTheme {
   static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     colorScheme: ColorScheme.fromSeed(
-      seedColor: blueGradientStart,
+      seedColor: primaryWhite,
       brightness: Brightness.dark,
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: primaryBlack,
+      foregroundColor: primaryWhite,
+      elevation: 0,
+      centerTitle: false,
+    ),
+    cardTheme: CardThemeData(
+      elevation: 4,
+      color: darkGray,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: mediumGray, width: 1),
+      ),
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: primaryWhite,
+        foregroundColor: primaryBlack,
+        elevation: 2,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
     ),
   );
 
-  // Gradients
-  static const LinearGradient blueGradient = LinearGradient(
-    colors: [blueGradientStart, blueGradientEnd],
+  // Black and white gradients
+  static const LinearGradient blackGradient = LinearGradient(
+    colors: [blackGradientStart, blackGradientEnd],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient emeraldGradient = LinearGradient(
-    colors: [Color(0xFF10B981), Color(0xFF059669)],
+  static const LinearGradient whiteGradient = LinearGradient(
+    colors: [whiteGradientStart, whiteGradientEnd],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
-  static const LinearGradient orangeGradient = LinearGradient(
-    colors: [Color(0xFFF97316), Color(0xFFEA580C)],
+  static const LinearGradient grayGradient = LinearGradient(
+    colors: [mediumGray, darkGray],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -114,6 +145,15 @@ class AppTheme {
       appBarTheme: appBarLightTheme,
       scrollbarTheme: scrollbarThemeData,
       dataTableTheme: dataTableLightThemeData,
+      // Add card theme for consistency
+      cardTheme: CardThemeData(
+        elevation: 4,
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: blackColor20, width: 1),
+        ),
+      ),
     );
   }
 

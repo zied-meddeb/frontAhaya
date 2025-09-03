@@ -75,7 +75,7 @@ class _ProductCardState extends State<ProductCard> {
         ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Opération réussie'),
-              backgroundColor: Colors.green,
+              backgroundColor: successColor,
               duration: Duration(seconds: 2),
             ));
         }
@@ -84,7 +84,7 @@ class _ProductCardState extends State<ProductCard> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text("Error occurred: ${e.toString()}"),
-                backgroundColor: Colors.red,
+                backgroundColor: errorColor,
                 duration: Duration(seconds: 2),
               ),
             );

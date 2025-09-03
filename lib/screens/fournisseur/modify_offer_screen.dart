@@ -132,21 +132,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     }
   }
 
-  Future<void> _fetchProducts() async {
-    try {
-      final fournisseurId = await _authService.getUserId();
-      if (fournisseurId != null) {
-        final products = await _promotionService.fetchProducts(fournisseurId);
-        setState(() {
-          _products = products;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur lors du chargement des produits: $e')),
-      );
-    }
-  }
+
 
   Widget _buildImageFromXFile(XFile imageFile, {required double width, required double height, BoxFit fit = BoxFit.cover}) {
     final cacheKey = imageFile.path;
@@ -265,7 +251,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection des images: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -335,7 +321,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -375,7 +361,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez remplir tous les champs obligatoires'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -458,9 +444,11 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
+                  if (value != _selectedCategoryId) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  }
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -549,14 +537,14 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Produit modifié avec succès'),
-                    backgroundColor: Colors.green,
+                    backgroundColor: SupplierTheme.primaryBlack,
                   ),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Veuillez remplir tous les champs obligatoires'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: SupplierTheme.mediumGray,
                   ),
                 );
               }
@@ -798,7 +786,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   const Spacer(),
                   GradientButton(
                     onPressed: () => Navigator.pop(context),
-                    gradient: SupplierTheme.blueGradient,
+                    gradient: SupplierTheme.blackGradient,
                     child: const Text('Confirmer', style: TextStyle(color: Colors.white)),
                   ),
                 ],
@@ -931,7 +919,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: SupplierTheme.blueGradient,
+                        gradient: SupplierTheme.blackGradient,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.info, color: Colors.white),
@@ -954,7 +942,11 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                     value: type,
                     child: Text(type),
                   )).toList(),
-                  onChanged: (value) => setState(() => _selectedType = value ?? 'Biens'),
+                  onChanged: (value) {
+                    if (value != _selectedType) {
+                      setState(() => _selectedType = value ?? 'Biens');
+                    }
+                  },
                   validator: (value) => value == null ? 'Type requis' : null,
                 ),
                 const SizedBox(height: 16),
@@ -1137,7 +1129,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: SupplierTheme.emeraldGradient,
+                      gradient: SupplierTheme.grayGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.location_on, color: Colors.white),
@@ -1160,7 +1152,11 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   value: country,
                   child: Text('🇹🇳 $country'),
                 )).toList(),
-                onChanged: (value) => setState(() => _selectedCountry = value ?? ''),
+                onChanged: (value) {
+                  if (value != _selectedCountry) {
+                    setState(() => _selectedCountry = value ?? '');
+                  }
+                },
                 validator: (value) => value == null ? 'Pays requis' : null,
               ),
               const SizedBox(height: 16),
@@ -1174,7 +1170,11 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   value: gov,
                   child: Text(gov),
                 )).toList(),
-                onChanged: (value) => setState(() => _selectedRegion = value ?? ''),
+                onChanged: (value) {
+                  if (value != _selectedRegion) {
+                    setState(() => _selectedRegion = value ?? '');
+                  }
+                },
                 validator: (value) => value == null ? 'Gouvernorat requis' : null,
               ),
               const SizedBox(height: 16),
@@ -1273,9 +1273,11 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
+                  if (value != _selectedCategoryId) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  }
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -1362,7 +1364,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
               const SizedBox(height: 16),
               GradientButton(
                 onPressed: _addNewProduct,
-                gradient: SupplierTheme.blueGradient,
+                gradient: SupplierTheme.blackGradient,
                 child: const Text('Ajouter le produit', style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
@@ -1373,7 +1375,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
               const SizedBox(height: 16),
               GradientButton(
                 onPressed: _showProductSelectionBottomSheet,
-                gradient: SupplierTheme.blueGradient,
+                gradient: SupplierTheme.blackGradient,
                 child: const Text('Choisir des produits', style: TextStyle(color: Colors.white)),
               ),
               const SizedBox(height: 24),
@@ -1574,13 +1576,9 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[100]!, Colors.green[200]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: SupplierTheme.whiteGradient,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!),
+        border: Border.all(color: SupplierTheme.mediumGray),
       ),
       child: Row(
         children: [
@@ -1593,12 +1591,12 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green[800],
+                    color: SupplierTheme.primaryBlack,
                   ),
                 ),
                 Text(
                   'Économie pour le client',
-                  style: TextStyle(color: Colors.green[700]),
+                  style: TextStyle(color: SupplierTheme.mediumGray),
                 ),
               ],
             ),
@@ -1611,14 +1609,14 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                 style: TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.green[800],
+                  color: SupplierTheme.primaryBlack,
                 ),
               ),
               Text(
                 '-${savings.toStringAsFixed(1)} DT',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.green[700],
+                  color: SupplierTheme.mediumGray,
                 ),
               ),
             ],
@@ -1642,7 +1640,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: SupplierTheme.orangeGradient,
+                      gradient: SupplierTheme.blackGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.calendar_today, color: Colors.white),
@@ -1749,12 +1747,12 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
             child: _currentStep < _totalSteps - 1
                 ? GradientButton(
               onPressed: _nextStep,
-              gradient: SupplierTheme.blueGradient,
+              gradient: SupplierTheme.blackGradient,
               child: const Text('Suivant', style: TextStyle(color: Colors.white)),
             )
                 : GradientButton(
               onPressed: _isSubmitting ? null : _submitOffer,
-              gradient: SupplierTheme.emeraldGradient,
+              gradient: SupplierTheme.grayGradient,
               child: _isSubmitting
                   ? const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1796,7 +1794,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez corriger les erreurs avant de continuer'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
           duration: Duration(seconds: 3),
         ),
       );
@@ -1836,7 +1834,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez corriger les erreurs avant de continuer'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
       return;
@@ -1934,7 +1932,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Promotion mise à jour avec succès'),
-            backgroundColor: Colors.green,
+            backgroundColor: SupplierTheme.primaryBlack,
           ),
         );
 
@@ -1966,7 +1964,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                 Text('Détails: ${e.toString()}'),
               ],
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: SupplierTheme.mediumGray,
             duration: const Duration(seconds: 6),
             action: SnackBarAction(
               label: 'Réessayer',

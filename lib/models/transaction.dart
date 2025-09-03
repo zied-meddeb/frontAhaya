@@ -86,13 +86,13 @@ extension TransactionStatusExtension on TransactionStatus {
   Color get color {
     switch (this) {
       case TransactionStatus.paid:
-        return Colors.green;
+        return const Color(0xFF000000);
       case TransactionStatus.pending:
-        return Colors.orange;
+        return const Color(0xFF424242);
       case TransactionStatus.processed:
-        return Colors.blue;
+        return const Color(0xFF000000);
       case TransactionStatus.failed:
-        return Colors.red;
+        return const Color(0xFF757575);
     }
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:shop/screens/discover/views/product.dart';
+import '../../../constants.dart';
+
 
 
 
@@ -122,7 +123,7 @@ class CompactProductCard extends StatelessWidget {
                         onTap: onToggleFavorite,
                         child: Icon(
                           isFavorite ? Icons.favorite : Icons.favorite_border,
-                          color: isFavorite ? Colors.red : Colors.grey,
+                          color: isFavorite ? primaryColor : blackColor40,
                           size: 22, // Slightly larger icon
                         ),
                       ),
@@ -221,7 +222,7 @@ class CompactProductCard extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.red ,
+                        color: primaryColor,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -247,7 +248,7 @@ class CompactProductCard extends StatelessWidget {
                       ),
                       child: Icon(
                         isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Colors.red : Colors.grey,
+                        color: isFavorite ? primaryColor : blackColor40,
                         size: 20,
                       ),
                     ),

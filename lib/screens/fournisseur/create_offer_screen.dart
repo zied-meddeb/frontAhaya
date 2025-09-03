@@ -131,9 +131,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
-  Future<void> _pickImages() async {
-    // This method is no longer needed - removed to keep only main image picker
-  }
+
 
   Future<void> _pickAfficheImage() async {
     try {
@@ -202,7 +200,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection des images: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -265,7 +263,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -301,7 +299,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez remplir tous les champs obligatoires'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
     }
@@ -392,9 +390,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
+                  if (value != _selectedCategoryId) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  }
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -474,14 +474,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Produit modifié avec succès'),
-                    backgroundColor: Colors.green,
+                    backgroundColor: SupplierTheme.primaryBlack,
                   ),
                 );
               } else {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('Veuillez remplir tous les champs obligatoires'),
-                    backgroundColor: Colors.red,
+                    backgroundColor: SupplierTheme.mediumGray,
                   ),
                 );
               }
@@ -511,11 +511,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.blue[400]!, Colors.cyan[400]!],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                gradient: SupplierTheme.blackGradient,
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
               ),
               child: Row(
@@ -580,7 +576,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                               decoration: BoxDecoration(
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected ? Colors.blue : Colors.grey[300]!,
+                                  color: isSelected ? SupplierTheme.primaryBlack : SupplierTheme.mediumGray,
                                   width: isSelected ? 2 : 1,
                                 ),
                                 boxShadow: [
@@ -735,7 +731,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   const Spacer(),
                   GradientButton(
                     onPressed: () => Navigator.pop(context),
-                    gradient: SupplierTheme.blueGradient,
+                    gradient: SupplierTheme.blackGradient,
                     child: const Text('Confirmer', style: TextStyle(color: Colors.white)),
                   ),
                 ],
@@ -853,7 +849,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        gradient: SupplierTheme.blueGradient,
+                        gradient: SupplierTheme.blackGradient,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.info, color: Colors.white),
@@ -877,7 +873,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     value: type,
                     child: Text(type),
                   )).toList(),
-                  onChanged: (value) => setState(() => _selectedType = value ?? 'Biens'),
+                  onChanged: (value) {
+                    if (value != _selectedType) {
+                      setState(() => _selectedType = value ?? 'Biens');
+                    }
+                  },
                   validator: (value) => value == null ? 'Type requis' : null,
                 ),
 
@@ -1009,7 +1009,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: SupplierTheme.emeraldGradient,
+                      gradient: SupplierTheme.grayGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.location_on, color: Colors.white),
@@ -1035,7 +1035,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                       value: country,
                       child: Text('🇹🇳 $country'),
                     )).toList(),
-                    onChanged: (value) => setState(() => _selectedCountry = value ?? ''),
+                    onChanged: (value) {
+                      if (value != _selectedCountry) {
+                        setState(() => _selectedCountry = value ?? '');
+                      }
+                    },
                     validator: (value) => value == null ? 'Pays requis' : null,
                   ),
                   const SizedBox(height: 16),
@@ -1049,7 +1053,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                       value: gov,
                       child: Text(gov),
                     )).toList(),
-                    onChanged: (value) => setState(() => _selectedRegion = value ?? ''),
+                    onChanged: (value) {
+                      if (value != _selectedRegion) {
+                        setState(() => _selectedRegion = value ?? '');
+                      }
+                    },
                     validator: (value) => value == null ? 'Gouvernorat requis' : null,
                   ),
                 ],
@@ -1116,11 +1124,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.blue[400]!, Colors.cyan[400]!],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: SupplierTheme.blackGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.shopping_bag, color: Colors.white),
@@ -1158,9 +1162,11 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   );
                 }).toList(),
                 onChanged: (value) {
-                  setState(() {
-                    _selectedCategoryId = value;
-                  });
+                  if (value != _selectedCategoryId) {
+                    setState(() {
+                      _selectedCategoryId = value;
+                    });
+                  }
                 },
                 validator: (value) {
                   if (value == null || value.isEmpty) {
@@ -1243,7 +1249,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               const SizedBox(height: 16),
               GradientButton(
                 onPressed: _addNewProduct,
-                gradient: SupplierTheme.blueGradient,
+                gradient: SupplierTheme.blackGradient,
                 child: const Text('Ajouter le produit', style: TextStyle(color: Colors.white)),
               ),
 
@@ -1257,7 +1263,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               const SizedBox(height: 16),
               GradientButton(
                 onPressed: _showProductSelectionBottomSheet,
-                gradient: SupplierTheme.blueGradient,
+                gradient: SupplierTheme.blackGradient,
                 child: const Text('Choisir des produits', style: TextStyle(color: Colors.white)),
               ),
 
@@ -1386,11 +1392,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [Colors.purple[400]!, Colors.pink[400]!],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
+                      gradient: SupplierTheme.grayGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.attach_money, color: Colors.white),
@@ -1462,13 +1464,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [Colors.green[100]!, Colors.green[200]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        gradient: SupplierTheme.whiteGradient,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!),
+        border: Border.all(color: SupplierTheme.mediumGray),
       ),
       child: Row(
         children: [
@@ -1481,12 +1479,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green[800],
+                    color: SupplierTheme.primaryBlack,
                   ),
                 ),
                 Text(
                   'Économie pour le client',
-                  style: TextStyle(color: Colors.green[700]),
+                  style: TextStyle(color: SupplierTheme.mediumGray),
                 ),
               ],
             ),
@@ -1506,7 +1504,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 '-${savings.toStringAsFixed(1)} DT',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Colors.green[700],
+                  color: SupplierTheme.mediumGray,
                 ),
               ),
             ],
@@ -1530,7 +1528,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      gradient: SupplierTheme.orangeGradient,
+                      gradient: SupplierTheme.blackGradient,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Icon(Icons.calendar_today, color: Colors.white),
@@ -1644,12 +1642,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
             child: _currentStep < _totalSteps - 1
                 ? GradientButton(
               onPressed: _nextStep,
-              gradient: SupplierTheme.blueGradient,
+              gradient: SupplierTheme.blackGradient,
               child: const Text('Suivant', style: TextStyle(color: Colors.white)),
             )
                 : GradientButton(
               onPressed: _isSubmitting ? null : _submitOffer,
-              gradient: SupplierTheme.emeraldGradient,
+              gradient: SupplierTheme.grayGradient,
               child: _isSubmitting
                   ? const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1690,7 +1688,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Étape ${_currentStep + 1} validée ✅'),
-          backgroundColor: Colors.green,
+          backgroundColor: SupplierTheme.primaryBlack,
           duration: const Duration(seconds: 2),
         ),
       );
@@ -1698,7 +1696,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez corriger les erreurs avant de continuer'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
           duration: Duration(seconds: 3),
         ),
       );
@@ -1738,7 +1736,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Veuillez corriger les erreurs avant de continuer'),
-          backgroundColor: Colors.red,
+          backgroundColor: SupplierTheme.mediumGray,
         ),
       );
       return;
@@ -1872,7 +1870,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 const Text('Vous recevrez une notification une fois approuvée.'),
               ],
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: SupplierTheme.primaryBlack,
             duration: const Duration(seconds: 4),
           ),
         );
@@ -1912,7 +1910,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 Text('Détails: ${e.toString()}'),
               ],
             ),
-            backgroundColor: Colors.red,
+            backgroundColor: SupplierTheme.mediumGray,
             duration: const Duration(seconds: 6),
             action: SnackBarAction(
               label: 'Réessayer',

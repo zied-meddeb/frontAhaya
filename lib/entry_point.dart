@@ -133,7 +133,7 @@ class _EntryPointState extends State<EntryPoint> {
                 decoration: const InputDecoration(
                   hintText: 'Search products...',
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: Colors.grey),
+                  hintStyle: TextStyle(color: blackColor40),
                 ),
                 style: const TextStyle(color: Colors.black, fontSize: 16),
                 onSubmitted: _performSearch,

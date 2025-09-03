@@ -134,18 +134,21 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
     case supplierScreenRoute:
       return MaterialPageRoute(builder: (context) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Provider.of<ThemeProvider>(context, listen: false)
-              .setSupplierTheme(_isSupplierRoute(settings.name));
-        });
+        // Set theme immediately before building the widget
+        Provider.of<ThemeProvider>(context, listen: false)
+            .setSupplierTheme(_isSupplierRoute(settings.name));
 
         return const MainScreen();
       });
 
     case fournissuerScreen:
-      return MaterialPageRoute(
-        builder: (context) => const MainScreen(),
-      );
+      return MaterialPageRoute(builder: (context) {
+        // Set theme immediately before building the widget
+        Provider.of<ThemeProvider>(context, listen: false)
+            .setSupplierTheme(_isSupplierRoute(settings.name));
+
+        return const MainScreen();
+      });
 
 
     default:

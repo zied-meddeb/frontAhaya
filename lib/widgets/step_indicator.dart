@@ -24,7 +24,7 @@ class StepIndicator extends StatelessWidget {
         widthFactor: (currentStep + 1) / totalSteps,
         child: Container(
           decoration: BoxDecoration(
-            gradient: SupplierTheme.blueGradient,
+            gradient: SupplierTheme.blackGradient,
             borderRadius: BorderRadius.circular(2),
           ),
         ),

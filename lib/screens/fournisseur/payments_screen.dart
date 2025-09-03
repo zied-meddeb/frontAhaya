@@ -72,7 +72,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                             ),
                           ),
                           ElevatedButton.icon(
-                            onPressed: () => transactionProvider?.simulateNewTransaction(),
+                            onPressed: () => transactionProvider.simulateNewTransaction(),
                             icon: const Icon(Icons.add),
                             label: const Text('Simuler transaction'),
                             style: ElevatedButton.styleFrom(
@@ -99,16 +99,16 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.8),
                       borderRadius: BorderRadius.circular(25),
-                      border: Border.all(color: Colors.grey[200]!),
+                      border: Border.all(color: SupplierTheme.mediumGray),
                     ),
                     child: TabBar(
                       controller: _tabController,
                       indicator: BoxDecoration(
-                        gradient: SupplierTheme.blueGradient,
+                        gradient: SupplierTheme.blackGradient,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       labelColor: Colors.white,
-                      unselectedLabelColor: Colors.grey[600],
+                      unselectedLabelColor: SupplierTheme.mediumGray,
                       tabs: const [
                         Tab(text: 'Transactions'),
                         Tab(text: 'Factures'),
@@ -144,33 +144,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
         'value': '${provider.monthlyRevenue.toStringAsFixed(0)} DT',
         'change': '+18%',
         'icon': Icons.attach_money,
-        'gradient': SupplierTheme.emeraldGradient,
+        'gradient': SupplierTheme.grayGradient,
       },
       {
         'title': 'Commissions',
         'value': '${provider.monthlyCommissions.toStringAsFixed(0)} DT',
         'change': '-3%',
         'icon': Icons.account_balance_wallet,
-        'gradient': SupplierTheme.blueGradient,
+        'gradient': SupplierTheme.blackGradient,
       },
       {
         'title': 'Revenus nets',
         'value': '${provider.monthlyNet.toStringAsFixed(0)} DT',
         'change': '+22%',
         'icon': Icons.trending_up,
-        'gradient': LinearGradient(
-          colors: [Colors.purple[400]!, Colors.purple[600]!],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        'gradient': SupplierTheme.whiteGradient,
       },
-      {
-        'title': 'En attente',
-        'value': '${provider.pendingAmount.toStringAsFixed(0)} DT',
-        'change': '',
-        'icon': Icons.schedule,
-        'gradient': SupplierTheme.orangeGradient,
-      },
+      
     ];
 
     return GridView.builder(
@@ -303,7 +293,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: SupplierTheme.mediumGray),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -312,16 +302,12 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Colors.grey[100]!, Colors.grey[200]!],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+              gradient: SupplierTheme.grayGradient,
               borderRadius: BorderRadius.circular(24),
             ),
             child: Icon(
               transaction.amount >= 0 ? Icons.arrow_upward : Icons.arrow_downward,
-              color: transaction.amount >= 0 ? Colors.green : Colors.red,
+              color: transaction.amount >= 0 ? SupplierTheme.primaryBlack : SupplierTheme.mediumGray,
             ),
           ),
           const SizedBox(width: 16),
@@ -346,23 +332,23 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(Icons.person, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.person, size: 14, color: SupplierTheme.mediumGray),
                     const SizedBox(width: 4),
                     Text(
                       transaction.customer,
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: SupplierTheme.mediumGray,
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                    Icon(Icons.calendar_today, size: 14, color: SupplierTheme.mediumGray),
                     const SizedBox(width: 4),
                     Text(
                       _formatDate(transaction.date),
                       style: TextStyle(
                         fontSize: 12,
-                        color: Colors.grey[600],
+                        color: SupplierTheme.mediumGray,
                       ),
                     ),
                   ],
@@ -379,14 +365,14 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: transaction.amount >= 0 ? Colors.green : Colors.red,
+                  color: transaction.amount >= 0 ? SupplierTheme.primaryBlack : SupplierTheme.mediumGray,
                 ),
               ),
               Text(
                 'Commission: ${transaction.commission.toStringAsFixed(1)} DT',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 12,
-                  color: Colors.grey,
+                  color: SupplierTheme.mediumGray,
                 ),
               ),
               Text(
@@ -394,7 +380,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> with TickerProviderStat
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: transaction.net >= 0 ? Colors.green[700] : Colors.red[700],
+                  color: transaction.net >= 0 ? SupplierTheme.primaryBlack : SupplierTheme.mediumGray,
                 ),
               ),
             ],

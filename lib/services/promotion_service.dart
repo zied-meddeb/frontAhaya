@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'dart:typed_data';
+
 import '../models/promotion.dart';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
@@ -13,7 +13,7 @@ class PromotionService {
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
+  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),

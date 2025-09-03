@@ -1,6 +1,4 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shop/components/product/product_card.dart';
 import 'package:shop/models/product_model.dart';
 import 'package:shop/route/screen_export.dart';
@@ -97,7 +95,7 @@ class _PopularProductsState extends State<PopularProducts> {
         final favorites = await _favoritesService.fetchFavorites(userId);
         if (mounted) {
           setState(() {
-            favoriteProductIds = favorites.map((product) => product.id ?? '').where((id) => id.isNotEmpty).toList();
+            favoriteProductIds = favorites.map((product) => product.id).where((id) => id.isNotEmpty).toList();
           });
         }
       }

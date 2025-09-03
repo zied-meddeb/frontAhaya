@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../models/user_profile.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../constants.dart';
 
 class ProfileHeader extends StatefulWidget {
   final UserProfile profile;
@@ -130,7 +131,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
         children: [
           CircleAvatar(
             radius: 80,
-            backgroundColor: Colors.grey[200],
+            backgroundColor: blackColor10,
             backgroundImage: widget.profile.profileImageUrl != null
                 ? NetworkImage(widget.profile.profileImageUrl!)
                 : null,
@@ -150,7 +151,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
               right: 8,
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.blue,
+                  color: primaryColor,
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: IconButton(
@@ -184,7 +185,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
         Text(
           credentials['email'] ?? 'No email',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: Colors.grey[600],
+            color: blackColor40,
           ),
         ),
         const SizedBox(height: 16),
@@ -207,7 +208,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
             icon: Icon(widget.isEditing ? Icons.save : Icons.edit),
             label: Text(widget.isEditing ? 'Save' : 'Edit'),
             style: ElevatedButton.styleFrom(
-              backgroundColor: widget.isEditing ? Colors.green : Colors.blue,
+              backgroundColor: widget.isEditing ? successColor : primaryColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),

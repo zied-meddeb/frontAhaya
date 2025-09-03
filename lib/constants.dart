@@ -15,20 +15,20 @@ const grandisExtendedFont = "Grandis Extended";
 
 // On color 80, 60.... those means opacity
 
-const Color primaryColor = Color(0xFF7B61FF);
+const Color primaryColor = Color(0xFF000000);
 
 const MaterialColor primaryMaterialColor =
-    MaterialColor(0xFF9581FF, <int, Color>{
-  50: Color(0xFFEFECFF),
-  100: Color(0xFFD7D0FF),
-  200: Color(0xFFBDB0FF),
-  300: Color(0xFFA390FF),
-  400: Color(0xFF8F79FF),
-  500: Color(0xFF7B61FF),
-  600: Color(0xFF7359FF),
-  700: Color(0xFF684FFF),
-  800: Color(0xFF5E45FF),
-  900: Color(0xFF6C56DD),
+    MaterialColor(0xFF000000, <int, Color>{
+  50: Color(0xFFF5F5F5),
+  100: Color(0xFFE0E0E0),
+  200: Color(0xFFBDBDBD),
+  300: Color(0xFF9E9E9E),
+  400: Color(0xFF757575),
+  500: Color(0xFF424242),
+  600: Color(0xFF303030),
+  700: Color(0xFF212121),
+  800: Color(0xFF1C1C1C),
+  900: Color(0xFF000000),
 });
 
 const Color blackColor = Color(0xFF16161E);
@@ -57,10 +57,10 @@ const Color darkGreyColor = Color(0xFF1C1C25);
 // const Color greyColor10 = Color(0xFFF8F8F9);
 // const Color greyColor5 = Color(0xFFFBFBFC);
 
-const Color purpleColor = Color(0xFF7B61FF);
-const Color successColor = Color(0xFF2ED573);
-const Color warningColor = Color(0xFFFFBE21);
-const Color errorColor = Color(0xFFEA5B5B);
+const Color purpleColor = Color(0xFF000000);
+const Color successColor = Color(0xFF000000);
+const Color warningColor = Color(0xFF424242);
+const Color errorColor = Color(0xFF757575);
 
 const double defaultPadding = 16.0;
 const double defaultBorderRadious = 12.0;

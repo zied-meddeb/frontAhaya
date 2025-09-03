@@ -15,17 +15,23 @@ class ThemeProvider extends ChangeNotifier {
   }
   
   void setSupplierTheme(bool isSupplier) {
-    _isSupplierTheme = isSupplier;
-    notifyListeners();
+    if (_isSupplierTheme != isSupplier) {
+      _isSupplierTheme = isSupplier;
+      notifyListeners();
+    }
   }
   
   void switchToSupplierTheme() {
-    _isSupplierTheme = true;
-    notifyListeners();
+    if (!_isSupplierTheme) {
+      _isSupplierTheme = true;
+      notifyListeners();
+    }
   }
   
   void switchToAppTheme() {
-    _isSupplierTheme = false;
-    notifyListeners();
+    if (_isSupplierTheme) {
+      _isSupplierTheme = false;
+      notifyListeners();
+    }
   }
 }

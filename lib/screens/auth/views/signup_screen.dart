@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shop/services/user_service.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'dart:math' as math;
+
 
 import '../../../route/route_constants.dart';
-import '../../../services/auth_service.dart';
+import '../../../constants.dart';
+
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -21,7 +21,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
-  final AuthService _auth = AuthService();
+
   final UserService _userService = UserService();
 
   Future<void> signUp() async {
@@ -47,7 +47,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response.toString()),
-            backgroundColor: Colors.red,
+            backgroundColor: errorColor,
             duration: const Duration(seconds: 2),
           ),
         );

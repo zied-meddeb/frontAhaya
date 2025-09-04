@@ -32,7 +32,6 @@ class CategoriesService {
   Future<List<dynamic>> fetchCategories() async {
     try {
       final response = await dio.get('/category');
-      print("resonse $response");
       if (response.statusCode == 200) {
         return  response.data['data'];
       } else {

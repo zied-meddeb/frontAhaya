@@ -30,6 +30,23 @@ class PromotionService {
     );
   }
 
+  //fetch all promotions
+Future<List<Promotion>> fetchAllPromotions() async {
+    try {
+      final response = await dio.get('/promotion');
+      if (response.statusCode == 200) {
+        final List<dynamic> promotionsData = response.data['data'] ?? [];
+        return promotionsData
+            .map((promoJson) => Promotion.fromJson(promoJson as Map<String, dynamic>))
+            .toList();
+      } else {
+        throw Exception('Failed to fetch promotions: ${response.statusCode}');
+      }
+    } catch (e) {
+      throw Exception('Error fetching promotions: $e');
+    }
+  }
+
   Future<Promotion> createPromotion({
     required String type,
     required String titre,
@@ -155,7 +172,7 @@ class PromotionService {
     }
   }
 
-  Future<List<Map<String, dynamic>>> fetchProducts(String fournisseurId) async {
+  Future<List<Map<String, dynamic>>> fetchProductsByFournisseur(String fournisseurId) async {
     try {
       final response = await dio.get(
         '/produit/byfournisseur/$fournisseurId',

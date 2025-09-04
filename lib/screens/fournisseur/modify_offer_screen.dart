@@ -74,6 +74,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     super.initState();
     _fetchPromotionData();
     _fetchCategories();
+    _fetchProducts();
   }
 
   Future<void> _fetchPromotionData() async {
@@ -81,7 +82,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       final promotionData = await _promotionService.fetchPromotionById(widget.promotionId);
       if (promotionData.isNotEmpty) {
         setState(() {
-          _promotion = Promotion.fromJson2(promotionData);
+          _promotion = Promotion.fromJson(promotionData);
           _initializeForm();
           _products = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
           _selectedProducts = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
@@ -132,7 +133,21 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     }
   }
 
-
+  Future<void> _fetchProducts() async {
+    try {
+      final fournisseurId = await _authService.getUserId();
+      if (fournisseurId != null) {
+        final products = await _promotionService.fetchProductsByFournisseur(fournisseurId);
+        setState(() {
+          _products = products;
+        });
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors du chargement des produits: $e')),
+      );
+    }
+  }
 
   Widget _buildImageFromXFile(XFile imageFile, {required double width, required double height, BoxFit fit = BoxFit.cover}) {
     final cacheKey = imageFile.path;
@@ -1917,7 +1932,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
         dateDebut: _promotionStartDate!,
         dateFin: _promotionEndDate!,
         fournisseurId: fournisseurId,
-        statut: _promotion!.statut ?? 'ATT_VER',
+        statut: _promotion!.statut,
         produits: productsData,
         afficheImages: _afficheImages,
         productImages: manualProductImages,

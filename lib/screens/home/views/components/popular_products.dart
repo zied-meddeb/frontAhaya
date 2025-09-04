@@ -6,7 +6,7 @@ import 'package:shop/services/produit_service.dart';
 import '../../../../constants.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../services/favoris_service.dart';
-import '../../../discover/views/all_products_screen.dart';
+import '../../../discover/views/All_promotions_screen.dart';
 import '../../../favoris/views/login_pop_up.dart';
 
 class PopularProducts extends StatefulWidget {
@@ -181,7 +181,7 @@ class _PopularProductsState extends State<PopularProducts> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => ProductListingScreen(),
+                    builder: (context) => PromotionListingScreen(),
                     maintainState: true,
                   ),
                 );

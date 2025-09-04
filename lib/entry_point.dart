@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shop/constants.dart';
 import 'package:shop/route/screen_export.dart';
-import 'package:shop/screens/discover/views/all_products_screen.dart';
+import 'package:shop/screens/discover/views/All_promotions_screen.dart';
 import 'package:shop/screens/favoris/views/favoris_screen.dart';
 import 'package:shop/services/auth_service.dart';
 import 'package:shop/l10n/app_localizations.dart';
@@ -43,7 +43,7 @@ class _EntryPointState extends State<EntryPoint> {
       setState(() {
         _pages = [
           HomeScreen(),
-          ProductListingScreen(),
+          PromotionListingScreen(),
           isLoggedIn?FavoriteScreen() :ProfileNotConnected(),
           isLoggedIn ? ProfileScreen() : ProfileNotConnected(),
         ];
@@ -53,7 +53,7 @@ class _EntryPointState extends State<EntryPoint> {
       setState(() {
         _pages = [
           HomeScreen(),
-          ProductListingScreen(),
+          PromotionListingScreen(),
           ProfileNotConnected(),
           ProfileNotConnected(), // Fallback if auth check fails
         ];
@@ -95,7 +95,7 @@ class _EntryPointState extends State<EntryPoint> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => ProductListingScreen(initialSearchTerm: query.trim()),
+          builder: (context) => PromotionListingScreen(initialSearchTerm: query.trim()),
         ),
       );
       _searchController.clear();

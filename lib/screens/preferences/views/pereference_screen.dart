@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shop/services/auth_service.dart';
 import 'package:shop/services/user_service.dart';
 
-import '../../../models/category_model.dart';
+import '../../../models/Category.dart';
 import '../../../services/categorie_service.dart';
 
 class CategoriesSelectionPage extends StatefulWidget {
@@ -115,7 +115,6 @@ class _CategoriesSelectionPageState extends State<CategoriesSelectionPage> {
       setState(() {
         categories = response.map((item) => Category(
           name: item['nom'] ?? '',
-          icon: item['icon'],
           id: item['_id'] ?? '',
         )).toList();
         isLoading = false;

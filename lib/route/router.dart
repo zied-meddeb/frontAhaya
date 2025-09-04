@@ -4,8 +4,10 @@ import 'package:shop/entry_point.dart';
 import 'package:shop/screens/favoris/views/favoris_screen.dart';
 
 import '../models/product_model.dart';
+import '../models/promotion.dart';
 import '../providers/theme_provider.dart';
-import '../screens/discover/views/all_products_screen.dart';
+import '../screens/discover/views/All_promotions_screen.dart';
+import '../screens/discover/views/promotionDetails.dart';
 import '../screens/fournisseur/main_screen.dart';
 import '../screens/preferences/views/pereference_screen.dart';
 import '../screens/profile/views/profile_details.dart';
@@ -134,9 +136,18 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         builder: (context) => const LanguageSelectorScreen(),
       );
 
-    case allProductsScreenRoute:
+    case allPromotionsScreenRoute:
       return MaterialPageRoute(
-        builder: (context) => const ProductListingScreen(),
+        builder: (context) => const PromotionListingScreen(),
+      );
+
+    case promotionDetailsRoute:
+      return MaterialPageRoute(
+        settings: settings,
+        builder: (context) {
+          final promo = settings.arguments as Promotion;
+          return PromotionDetailsScreen(promotion: promo);
+        },
       );
 
     case profileDetailsScreenRoute:
@@ -170,7 +181,6 @@ Route<dynamic> generateRoute(RouteSettings settings) {
 
         return const FournisseurOnboardingScreen();
       });
-
     default:
       return MaterialPageRoute(
         // Make a screen for undefine

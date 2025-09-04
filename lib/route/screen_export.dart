@@ -23,6 +23,7 @@ export '/screens/extra/language_screen.dart';
 export '/screens/fournisseur/create_offer_screen.dart';
 export '/screens/fournisseur/payments_screen.dart';
 export '/screens/fournisseur/my_offers_screen.dart';
+export '/screens/fournisseur/onboarding_screen.dart';
 
 
 

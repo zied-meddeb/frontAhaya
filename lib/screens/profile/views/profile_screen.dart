@@ -3,6 +3,7 @@ import 'package:flutter_svg/svg.dart';
 
 import 'package:shop/constants.dart';
 import 'package:shop/route/screen_export.dart';
+import 'package:shop/l10n/app_localizations.dart';
 
 import '../../../services/auth_service.dart';
 import 'components/profile_card.dart';
@@ -32,6 +33,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return Scaffold(
       body: ListView(
         children: [
@@ -51,25 +54,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
             child: Text(
-              "Account",
+              l10n.myProfile,
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
           const SizedBox(height: defaultPadding / 2),
           ProfileMenuListTile(
-            text: "Wishlist",
+            text: l10n.favorites,
             svgSrc: "assets/icons/Wishlist.svg",
             press: () {},
           ),
           ProfileMenuListTile(
-            text: "Preferences",
+            text: l10n.settings,
             svgSrc: "assets/icons/Preferences.svg",
             press: () {
               Navigator.pushNamed(context, preferencesScreenRoute);
             },
           ),
           ProfileMenuListTile(
-            text: "Language",
+            text: l10n.language,
             svgSrc: "assets/icons/Language.svg",
             press: () {
               Navigator.pushNamed(context, selectLanguageScreenRoute);
@@ -83,12 +86,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
             padding: const EdgeInsets.symmetric(
                 horizontal: defaultPadding, vertical: defaultPadding / 2),
             child: Text(
-              "Help & Support",
+              l10n.help,
               style: Theme.of(context).textTheme.titleSmall,
             ),
           ),
           ProfileMenuListTile(
-            text: "Get Help",
+            text: l10n.help,
             svgSrc: "assets/icons/Help.svg",
             press: () {
               Navigator.pushNamed(context, getHelpScreenRoute);

@@ -6,14 +6,15 @@ import 'package:shop/route/screen_export.dart';
 import 'package:shop/screens/discover/views/all_products_screen.dart';
 import 'package:shop/screens/favoris/views/favoris_screen.dart';
 import 'package:shop/services/auth_service.dart';
+import 'package:shop/l10n/app_localizations.dart';
 
 class EntryPoint extends StatefulWidget {
   const EntryPoint({super.key});
 
   // Define enum for PopupMenu choices
-  static const String aPropos = 'À propos';
-  static const String contact = 'Contact';
-  static const String language = 'Language';
+  static const String aPropos = 'about';
+  static const String contact = 'contact';
+  static const String language = 'language';
 
   static const List<String> choices = <String>[aPropos, contact, language];
 
@@ -106,6 +107,8 @@ class _EntryPointState extends State<EntryPoint> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     if (_isLoading) {
       return Scaffold(
         body: Center(child: CircularProgressIndicator()),
@@ -130,17 +133,17 @@ class _EntryPointState extends State<EntryPoint> {
             ? TextField(
                 controller: _searchController,
                 autofocus: true,
-                decoration: const InputDecoration(
-                  hintText: 'Search products...',
+                decoration: InputDecoration(
+                  hintText: l10n.searchProducts,
                   border: InputBorder.none,
-                  hintStyle: TextStyle(color: blackColor40),
+                  hintStyle: const TextStyle(color: blackColor40),
                 ),
                 style: const TextStyle(color: Colors.black, fontSize: 16),
                 onSubmitted: _performSearch,
               )
-            : const Text(
-                "Ahaya",
-                style: TextStyle(
+            : Text(
+                l10n.appTitle,
+                style: const TextStyle(
                   fontSize: 25,
                   fontWeight: FontWeight.w400,
                   color: Color(0xFF000000),
@@ -246,25 +249,25 @@ class _EntryPointState extends State<EntryPoint> {
           selectedFontSize: 12,
           selectedItemColor: primaryColor,
           items: [
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home_outlined, color: primaryColor),
-              label: "Acceuil",
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.home_outlined),
+              activeIcon: const Icon(Icons.home_outlined, color: primaryColor),
+              label: l10n.home,
             ),
             BottomNavigationBarItem(
               icon: svgIcon("assets/icons/Bag.svg"),
               activeIcon: svgIcon("assets/icons/Bag.svg", color: primaryColor),
-              label: "Shop",
+              label: l10n.shop,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_border_outlined),
-              activeIcon: Icon(Icons.favorite_border_outlined, color: primaryColor),
-              label: "Favoris",
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.favorite_border_outlined),
+              activeIcon: const Icon(Icons.favorite_border_outlined, color: primaryColor),
+              label: l10n.favorites,
             ),
-            const BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person_outline, color: primaryColor),
-              label: "Profile",
+            BottomNavigationBarItem(
+              icon: const Icon(Icons.person_outline),
+              activeIcon: const Icon(Icons.person_outline, color: primaryColor),
+              label: l10n.profile,
             ),
           ],
         ),

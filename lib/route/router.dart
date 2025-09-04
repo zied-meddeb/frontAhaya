@@ -37,8 +37,20 @@ Route<dynamic> generateRoute(RouteSettings settings) {
     case emailVerification:
       return MaterialPageRoute(
         builder: (context) {
-          String email = settings.arguments as String;
-          return EmailVerificationPage(email: email);
+          if (settings.arguments is Map<String, dynamic>) {
+            Map<String, dynamic> args = settings.arguments as Map<String, dynamic>;
+            return EmailVerificationPage(
+              email: args['email'],
+              userType: args['userType'],
+            );
+          } else {
+            // Fallback for old format (string email only)
+            String email = settings.arguments as String;
+            return EmailVerificationPage(
+              email: email,
+              userType: 'utilisateur', // Default to user type
+            );
+          }
         },
       );
 
@@ -150,6 +162,14 @@ Route<dynamic> generateRoute(RouteSettings settings) {
         return const MainScreen();
       });
 
+    case fournisseurOnboardingRoute:
+      return MaterialPageRoute(builder: (context) {
+        // Set theme immediately before building the widget
+        Provider.of<ThemeProvider>(context, listen: false)
+            .setSupplierTheme(_isSupplierRoute(settings.name));
+
+        return const FournisseurOnboardingScreen();
+      });
 
     default:
       return MaterialPageRoute(

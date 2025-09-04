@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../models/user_profile.dart';
 import '../../../../services/auth_service.dart';
 import '../../../../constants.dart';
+import '../../../../l10n/app_localizations.dart';
 
 class ProfileHeader extends StatefulWidget {
   final UserProfile profile;
@@ -196,6 +197,8 @@ class _ProfileHeaderState extends State<ProfileHeader> {
   }
 
   Widget _buildActionButtons(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    
     return ConstrainedBox(
       constraints: const BoxConstraints(maxWidth: 400),
       child: Wrap(
@@ -206,7 +209,7 @@ class _ProfileHeaderState extends State<ProfileHeader> {
           ElevatedButton.icon(
             onPressed: widget.onToggleEdit,
             icon: Icon(widget.isEditing ? Icons.save : Icons.edit),
-            label: Text(widget.isEditing ? 'Save' : 'Edit'),
+            label: Text(widget.isEditing ? l10n.save : l10n.edit),
             style: ElevatedButton.styleFrom(
               backgroundColor: widget.isEditing ? successColor : primaryColor,
               foregroundColor: Colors.white,

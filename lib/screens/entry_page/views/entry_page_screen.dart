@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shop/route/route_constants.dart';
+import 'package:shop/services/auth_service.dart';
+import 'package:shop/services/fournisseur_service.dart';
 import 'dart:math' as math;
 
 class OnBordingScreen extends StatefulWidget {
@@ -13,6 +15,8 @@ class OnBordingScreen extends StatefulWidget {
 class _OnBordingScreenState extends State<OnBordingScreen>
     with TickerProviderStateMixin {
   bool isLoading = true;
+  final AuthService _auth = AuthService();
+  final FournisseurService _fournisseurService = FournisseurService();
 
   // Animation controllers
   late AnimationController _logoLoadingController;
@@ -112,6 +116,7 @@ class _OnBordingScreenState extends State<OnBordingScreen>
         isLoading = false;
       });
       _startEntranceAnimations();
+      _checkAuthenticationStatus();
     });
   }
 
@@ -127,6 +132,50 @@ class _OnBordingScreenState extends State<OnBordingScreen>
     await _textEntranceController.forward();
     await Future.delayed(Duration(milliseconds: 400));
     await _buttonController.forward();
+  }
+
+  Future<void> _checkAuthenticationStatus() async {
+    try {
+      final isLoggedIn = await _auth.isLoggedIn();
+      
+      if (!isLoggedIn) {
+        return; // Stay on onboarding screen
+      }
+
+      final userRole = await _auth.getUserRole();
+      
+      if (userRole == 'fournisseur') {
+        // Check if fournisseur has completed onboarding
+        try {
+          final onboardingStatus = await _fournisseurService.getOnboardingStatus();
+          
+          if (onboardingStatus['isOnboardingCompleted'] == true) {
+            // Redirect to fournisseur main screen
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, fournissuerScreen);
+            }
+          } else {
+            // Redirect to onboarding
+            if (mounted) {
+              Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
+            }
+          }
+        } catch (e) {
+          // If error checking onboarding, redirect to onboarding
+          if (mounted) {
+            Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
+          }
+        }
+      } else if (userRole == 'user') {
+        // Redirect to main app for users
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, entryPointScreenRoute);
+        }
+      }
+    } catch (e) {
+      // Error checking authentication, stay on onboarding screen
+      print('Error checking authentication: $e');
+    }
   }
 
   @override

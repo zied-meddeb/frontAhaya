@@ -61,6 +61,7 @@ const String emailVerification="verification_email";
 const String allProductsScreenRoute = "all_products";
 const String profileDetailsScreenRoute = "profile_details";
 const String fournissuerScreen ="fournisseur";
+const String fournisseurOnboardingRoute = "fournisseur-onboarding";
 
 
 

@@ -59,6 +59,7 @@ class FournisseurService {
         fournisseurData['email'] ?? email,
         fournisseurData['nom'],
         fournisseurData['id'],
+        role: 'fournisseur',
       );
       await _auth.saveAuthToken(fournisseurData['token']);
 
@@ -81,9 +82,11 @@ class FournisseurService {
     required String email,
     required String password,
     required String name,
+    required String phone,
+    required Map<String, dynamic> address,
   }) async {
     try {
-      if (email.isEmpty || password.isEmpty || name.isEmpty) {
+      if (email.isEmpty || password.isEmpty || name.isEmpty || phone.isEmpty) {
         throw AuthException('All fields are required');
       }
 
@@ -97,6 +100,8 @@ class FournisseurService {
           'email': email,
           'password': password,
           'nom': name,
+          'telephone': phone,
+          'addresses': [address], // Send as array with single address
         },
         options: Options(
           validateStatus: (status) => status == 201,
@@ -135,6 +140,7 @@ class FournisseurService {
           response.data['data']['email'] ?? email,
           response.data['data']['nom'],
           response.data['data']['id'],
+          role: 'fournisseur',
         );
         await _auth.saveAuthToken( response.data['data']['token']);
         return true;
@@ -182,6 +188,105 @@ class FournisseurService {
 
   }
 
+  // Address management methods
+  Future<Map<String, dynamic>> addAddress(Map<String, dynamic> addressData) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/fournisseur/addresses',
+        data: addressData,
+      );
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        return response.data['data'];
+      } else {
+        throw AuthException(response.data['message'] ?? 'Failed to add address');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw AuthException(e.response!.data['message']);
+      }
+      throw AuthException('Failed to add address: ${e.message}');
+    }
+  }
+
+  Future<Map<String, dynamic>> updateAddress(String addressId, Map<String, dynamic> addressData) async {
+    try {
+      final response = await dio.put(
+        '$baseUrl/fournisseur/addresses/$addressId',
+        data: addressData,
+      );
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        return response.data['data'];
+      } else {
+        throw AuthException(response.data['message'] ?? 'Failed to update address');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw AuthException(e.response!.data['message']);
+      }
+      throw AuthException('Failed to update address: ${e.message}');
+    }
+  }
+
+  Future<bool> deleteAddress(String addressId) async {
+    try {
+      final response = await dio.delete(
+        '$baseUrl/fournisseur/addresses/$addressId',
+      );
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        return true;
+      } else {
+        throw AuthException(response.data['message'] ?? 'Failed to delete address');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw AuthException(e.response!.data['message']);
+      }
+      throw AuthException('Failed to delete address: ${e.message}');
+    }
+  }
+
+  // Onboarding methods
+  Future<Map<String, dynamic>> completeOnboarding(Map<String, dynamic> onboardingData) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/fournisseur/onboarding/complete',
+        data: onboardingData,
+      );
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        return response.data['data'];
+      } else {
+        throw AuthException(response.data['message'] ?? 'Failed to complete onboarding');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw AuthException(e.response!.data['message']);
+      }
+      throw AuthException('Failed to complete onboarding: ${e.message}');
+    }
+  }
+
+  Future<Map<String, dynamic>> getOnboardingStatus() async {
+    try {
+      final response = await dio.get(
+        '$baseUrl/fournisseur/onboarding/status',
+      );
+      
+      if (response.statusCode == 200 && response.data['success']) {
+        return response.data['data'];
+      } else {
+        throw AuthException(response.data['message'] ?? 'Failed to get onboarding status');
+      }
+    } on DioException catch (e) {
+      if (e.response?.data != null && e.response?.data['message'] != null) {
+        throw AuthException(e.response!.data['message']);
+      }
+      throw AuthException('Failed to get onboarding status: ${e.message}');
+    }
+  }
 
 }
 

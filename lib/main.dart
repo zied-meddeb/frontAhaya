@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:shop/providers/offer_provider.dart';
 import 'package:shop/providers/transaction_provider.dart';
 import 'package:shop/providers/theme_provider.dart';
+import 'package:shop/providers/language_provider.dart';
 import 'package:shop/route/route_constants.dart';
 import 'package:shop/route/router.dart' as router;
 import 'package:shop/services/auth_service.dart';
+import 'package:shop/l10n/app_localizations.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -34,15 +37,28 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => OfferProvider()),
         ChangeNotifierProvider(create: (_) => TransactionProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => LanguageProvider()),
       ],
-      child: Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
+      child: Consumer2<ThemeProvider, LanguageProvider>(
+        builder: (context, themeProvider, languageProvider, child) {
           return MaterialApp(
             debugShowCheckedModeBanner: false,
             title: 'Ahaya',
             theme: themeProvider.getTheme(context),
             // Dark theme is inclided in the Full template
             themeMode: ThemeMode.light,
+            locale: languageProvider.currentLocale,
+            localizationsDelegates: [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [
+              Locale('en', 'US'),
+              Locale('fr', 'FR'),
+              Locale('ar', 'SA'),
+            ],
             onGenerateRoute: router.generateRoute,
             initialRoute: onbordingScreenRoute,
             builder: (context, child) {

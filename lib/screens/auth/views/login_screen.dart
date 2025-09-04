@@ -97,6 +97,23 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _checkFournisseurOnboarding() async {
+    try {
+      final onboardingStatus = await _fournisseurService.getOnboardingStatus();
+      
+      if (onboardingStatus['isOnboardingCompleted'] == true) {
+        // Onboarding completed, go to main fournisseur screen
+        Navigator.pushReplacementNamed(context, fournissuerScreen);
+      } else {
+        // Onboarding not completed, go to onboarding screen
+        Navigator.pushReplacementNamed(context, '/fournisseur-onboarding');
+      }
+    } catch (e) {
+      // If there's an error checking onboarding status, go to onboarding screen
+      Navigator.pushReplacementNamed(context, '/fournisseur-onboarding');
+    }
+  }
+
   Future<void> login() async {
     // Validate fields first
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -142,7 +159,8 @@ class _LoginScreenState extends State<LoginScreen>
           Navigator.pushReplacementNamed(context, entryPointScreenRoute);
         }
         else{
-          Navigator.pushReplacementNamed(context, fournissuerScreen);
+          // Check if fournisseur has completed onboarding
+          await _checkFournisseurOnboarding();
         }
 
       }

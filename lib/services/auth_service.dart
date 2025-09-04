@@ -6,10 +6,13 @@ class AuthService {
 
 
   // Save login credentials
-  Future<void> saveCredentials(String email, String nom,String id) async {
+  Future<void> saveCredentials(String email, String nom,String id, {String? role}) async {
     await _storage.write(key: 'id', value: id);
     await _storage.write(key: 'nom', value: nom);
     await _storage.write(key: 'email', value: email);
+    if (role != null) {
+      await _storage.write(key: 'role', value: role);
+    }
   }
 
   // Get stored login credentials
@@ -17,7 +20,8 @@ class AuthService {
     String? id = await _storage.read(key: 'id');
     String? email = await _storage.read(key: 'email');
     String? nom = await _storage.read(key: 'nom');
-    return {'email': email ?? '','nom': nom ?? '','id': id ?? ''};
+    String? role = await _storage.read(key: 'role');
+    return {'email': email ?? '','nom': nom ?? '','id': id ?? '', 'role': role ?? ''};
   }
   // Get stored login credentials
   Future<String?> getUserId() async {
@@ -49,6 +53,12 @@ class AuthService {
     await _storage.delete(key: 'password');
     await _storage.delete(key: 'nom');
     await _storage.delete(key: 'token');
+    await _storage.delete(key: 'role');
+  }
+
+  // Get user role
+  Future<String?> getUserRole() async {
+    return await _storage.read(key: 'role');
   }
 
   Future<void> saveLanguage(String language) async {

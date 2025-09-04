@@ -59,6 +59,7 @@ class UserService {
          userData['email'] ?? email,
          userData['nom'],
          userData['id'],
+         role: 'user',
       );
       await _auth.saveAuthToken(userData['token']);
 

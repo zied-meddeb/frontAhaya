@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shop/services/user_service.dart';
+import 'package:shop/services/fournisseur_service.dart';
 
 import '../../../route/route_constants.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   final String email;
-
+  final String userType;
 
   const EmailVerificationPage({
     Key? key,
     required this.email,
-
+    required this.userType,
   }) : super(key: key);
 
   @override
@@ -27,6 +28,7 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
   String? _errorMessage;
   int _resendCountdown = 0;
   final UserService _userService = UserService();
+  final FournisseurService _fournisseurService = FournisseurService();
   bool _isVerified = false;
 
   @override
@@ -53,7 +55,11 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
 
   Future<void> _deleteUnverifiedUser() async {
     try {
-      await _userService.deleteUnverifiedUser(widget.email);
+      if (widget.userType == 'utilisateur') {
+        await _userService.deleteUnverifiedUser(widget.email);
+      } else {
+        await _fournisseurService.deleteUnverifiedfournisseur(widget.email);
+      }
       debugPrint("Unverified user deleted successfully");
     } catch (e) {
       debugPrint('Error deleting unverified user: $e');
@@ -92,8 +98,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     });
 
     try {
-      // Here you would call your actual resend code API
-      await _userService.sendVerificationCode(widget.email);
+      // Call the appropriate resend code API based on user type
+      if (widget.userType == 'utilisateur') {
+        await _userService.sendVerificationCode(widget.email);
+      } else {
+        await _fournisseurService.sendVerificationCode(widget.email);
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -146,7 +156,12 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
     });
 
     try {
-      final response = await _userService.verifyEmail(widget.email, _verificationCode);
+      bool response;
+      if (widget.userType == 'utilisateur') {
+        response = await _userService.verifyEmail(widget.email, _verificationCode);
+      } else {
+        response = await _fournisseurService.verifyEmail(widget.email, _verificationCode);
+      }
 
       if (response == true) {
         setState(() {
@@ -160,7 +175,14 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
               backgroundColor: Colors.green,
             ),
           );
-          Navigator.pushReplacementNamed(context, entryPointScreenRoute);
+          
+          // Navigate based on user type
+          if (widget.userType == 'utilisateur') {
+            Navigator.pushReplacementNamed(context, entryPointScreenRoute);
+          } else {
+            // For fournisseur, check onboarding status and redirect accordingly
+            Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
+          }
         }
       } else {
         setState(() {

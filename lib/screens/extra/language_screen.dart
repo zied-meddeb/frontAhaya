@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:shop/services/auth_service.dart';
+import 'package:provider/provider.dart';
+import 'package:shop/providers/language_provider.dart';
+import 'package:shop/l10n/app_localizations.dart';
+import 'package:shop/constants.dart';
 
 
 class LanguageSelectorScreen extends StatefulWidget {
@@ -10,64 +13,26 @@ class LanguageSelectorScreen extends StatefulWidget {
 }
 
 class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
-  String _selectedLanguage = 'fr'; // Default language
-  final AuthService _authService = AuthService();
-
-
   final List<Language> languages = const [
     Language(code: 'ar', name: 'العربية', flag: '🇸🇦'),
     Language(code: 'fr', name: 'Français', flag: '🇫🇷'),
     Language(code: 'en', name: 'English', flag: '🇺🇸'),
   ];
 
-  final Map<String, Translation> translations = const {
-    'ar': Translation(
-      title: 'اختيار اللغة',
-      description: 'اختر لغتك المفضلة',
-      label: 'اللغة',
-      placeholder: 'اختر لغة',
-      selected: 'اللغة المختارة:',
-    ),
-    'fr': Translation(
-      title: 'Sélection de langue',
-      description: 'Choisissez votre langue préférée',
-      label: 'Langue',
-      placeholder: 'Sélectionner une langue',
-      selected: 'Langue sélectionnée :',
-    ),
-    'en': Translation(
-      title: 'Language Selection',
-      description: 'Choose your preferred language',
-      label: 'Language',
-      placeholder: 'Select a language',
-      selected: 'Selected language:',
-    ),
-  };
-
-  Translation get currentTranslation => translations[_selectedLanguage]!;
-  Language get currentLanguage => languages.firstWhere((lang) => lang.code == _selectedLanguage);
-
   @override
   void initState() {
     super.initState();
-    _loadSelectedLanguage();
-  }
-
-  Future<void> _loadSelectedLanguage() async {
-    final language = await _authService.getLanguage();
-    setState(() {
-      _selectedLanguage = language ?? 'fr'; // Default to French if not found
+    // Load the current language when the screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<LanguageProvider>().loadLanguage();
     });
   }
 
-  Future<void> _changeSelectedLanguage(String languageCode) async {
-    setState(() {
-      _selectedLanguage = languageCode;
-    });
+  Future<void> _changeLanguage(String languageCode) async {
+    await context.read<LanguageProvider>().changeLanguage(languageCode);
   }
 
   Future<void> _saveLanguageAndPop() async {
-    await _authService.saveLanguage(_selectedLanguage);
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -75,16 +40,17 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isWeb = screenWidth > 600;
+    final l10n = AppLocalizations.of(context);
 
     return Scaffold(
       appBar: AppBar(
+        title: Text(l10n.languageSelection),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             Navigator.of(context).pop();
           },
         ),
-
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -131,12 +97,14 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context);
+    
     return Column(
       children: [
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: Colors.blue.shade600,
+            color: primaryColor,
             shape: BoxShape.circle,
           ),
           child: const Icon(
@@ -147,7 +115,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
         ),
         const SizedBox(height: 16),
         Text(
-          currentTranslation.title,
+          l10n.languageSelection,
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
@@ -157,7 +125,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          currentTranslation.description,
+          l10n.choosePreferredLanguage,
           style: const TextStyle(
             fontSize: 14,
             color: Color(0xFF6B7280), // gray-600
@@ -169,11 +137,14 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
   }
 
   Widget _buildLanguageSelector() {
+    final l10n = AppLocalizations.of(context);
+    final languageProvider = context.watch<LanguageProvider>();
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          currentTranslation.label,
+          l10n.language,
           style: const TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -190,12 +161,12 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
           ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: _selectedLanguage,
-              hint: Text(currentTranslation.placeholder),
+              value: languageProvider.currentLanguage,
+              hint: Text(l10n.selectALanguage),
               isExpanded: true,
               onChanged: (String? newValue) {
                 if (newValue != null) {
-                  _changeSelectedLanguage(newValue);
+                  _changeLanguage(newValue);
                 }
               },
               items: languages.map<DropdownMenuItem<String>>((Language language) {
@@ -227,7 +198,7 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
             child: ElevatedButton(
               onPressed: _saveLanguageAndPop,
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
+                backgroundColor: primaryColor,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -235,11 +206,10 @@ class _LanguageSelectorScreenState extends State<LanguageSelectorScreen> {
                 ),
                 elevation: 4,
               ),
-              child: const Text(
-                'Confirmer',
-                style: TextStyle(
+              child: Text(
+                l10n.confirm,
+                style: const TextStyle(
                   fontSize: 18,
-
                 ),
               ),
             ),
@@ -264,18 +234,4 @@ class Language {
   });
 }
 
-class Translation {
-  final String title;
-  final String description;
-  final String label;
-  final String placeholder;
-  final String selected;
 
-  const Translation({
-    required this.title,
-    required this.description,
-    required this.label,
-    required this.placeholder,
-    required this.selected,
-  });
-}

@@ -106,7 +106,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     try {
       final fournisseurId = await _authService.getUserId();
       if (fournisseurId != null) {
-        final products = await _promotionService.fetchProducts(fournisseurId);
+        final products = await _promotionService.fetchProductsByFournisseur(fournisseurId);
         setState(() {
           _products = products;
         });

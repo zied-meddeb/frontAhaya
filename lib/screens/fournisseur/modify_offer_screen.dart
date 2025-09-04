@@ -81,7 +81,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       final promotionData = await _promotionService.fetchPromotionById(widget.promotionId);
       if (promotionData.isNotEmpty) {
         setState(() {
-          _promotion = Promotion.fromJson2(promotionData);
+          _promotion = Promotion.fromJson(promotionData);
           _initializeForm();
           _products = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
           _selectedProducts = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
@@ -136,7 +136,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     try {
       final fournisseurId = await _authService.getUserId();
       if (fournisseurId != null) {
-        final products = await _promotionService.fetchProducts(fournisseurId);
+        final products = await _promotionService.fetchProductsByFournisseur(fournisseurId);
         setState(() {
           _products = products;
         });

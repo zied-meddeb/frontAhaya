@@ -58,9 +58,10 @@ const String paymentMethodScreenRoute = "payment_method";
 const String addNewCardScreenRoute = "add_new_card";
 const String thanksForOrderScreenRoute = "thanks_order";
 const String emailVerification="verification_email";
-const String allProductsScreenRoute = "all_products";
+const String allPromotionsScreenRoute = "all_promotions";
 const String profileDetailsScreenRoute = "profile_details";
 const String fournissuerScreen ="fournisseur";
+const String promotionDetailsRoute = "promotion_details";
 
 
 

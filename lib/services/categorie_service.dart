@@ -11,7 +11,7 @@ class CategoriesService {
 
   //http://10.0.2.2:3100
   //http://localhost:3100
-  CategoriesService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  CategoriesService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),

@@ -538,19 +538,23 @@ class _FournisseurOnboardingScreenState extends State<FournisseurOnboardingScree
   
   Widget _buildBottomNavigation() {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.all(16.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           if (_currentStep > 0)
-            ElevatedButton(
-              onPressed: () {
-                _pageController.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeInOut,
-                );
-              },
-              child: const Text('Précédent'),
+            SizedBox(
+              width: 100,
+              child: ElevatedButton(
+                onPressed: () {
+                  _pageController.previousPage(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                  );
+                },
+                child: const Text('Précédent'),
+              ),
             )
           else
             const SizedBox.shrink(),
@@ -558,31 +562,34 @@ class _FournisseurOnboardingScreenState extends State<FournisseurOnboardingScree
           Text('Étape ${_currentStep + 1} sur 3'),
           
           if (_currentStep < 2)
-            ElevatedButton(
-              onPressed: () {
-                if (_currentStep == 0) {
-                  // Validate store info
-                  if (_storeNameController.text.isNotEmpty) {
+            SizedBox(
+              width: 100,
+              child: ElevatedButton(
+                onPressed: () {
+                  if (_currentStep == 0) {
+                    // Validate store info
+                    if (_storeNameController.text.isNotEmpty) {
+                      _pageController.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Veuillez entrer le nom du magasin'),
+                          backgroundColor: warningColor,
+                        ),
+                      );
+                    }
+                  } else {
                     _pageController.nextPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                     );
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Veuillez entrer le nom du magasin'),
-                        backgroundColor: warningColor,
-                      ),
-                    );
                   }
-                } else {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeInOut,
-                  );
-                }
-              },
-              child: const Text('Suivant'),
+                },
+                child: const Text('Suivant'),
+              ),
             )
           else
             const SizedBox.shrink(),

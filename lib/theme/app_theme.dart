@@ -36,7 +36,7 @@ class SupplierTheme {
       centerTitle: false,
     ),
     //CardThemeData
-    cardTheme: CardThemeData(
+    cardTheme: CardTheme(
       elevation: 4,
       color: primaryWhite,
       shape: RoundedRectangleBorder(
@@ -80,7 +80,7 @@ class SupplierTheme {
       elevation: 0,
       centerTitle: false,
     ),
-    cardTheme: CardThemeData(
+    cardTheme: CardTheme(
       elevation: 4,
       color: darkGray,
       shape: RoundedRectangleBorder(
@@ -146,7 +146,7 @@ class AppTheme {
       scrollbarTheme: scrollbarThemeData,
       dataTableTheme: dataTableLightThemeData,
       // Add card theme for consistency
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 4,
         color: Colors.white,
         shape: RoundedRectangleBorder(

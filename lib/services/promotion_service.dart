@@ -13,7 +13,7 @@ class PromotionService {
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -55,7 +55,8 @@ Future<List<Promotion>> fetchAllPromotions() async {
     required double prixOffre,
     required DateTime dateDebut,
     required DateTime dateFin,
-    DateTime? dateAffiche,
+    DateTime? dateAfficheDebut,
+    DateTime? dateAfficheFin,
     required String fournisseurId,
     required String statut,
     required List<Map<String, dynamic>> produits,
@@ -79,9 +80,12 @@ Future<List<Promotion>> fetchAllPromotions() async {
         'produits': jsonEncode(produits), 
       };
 
-      // Add dateAffiche only if provided
-      if (dateAffiche != null) {
-        formFields['date_affiche'] = dateAffiche.toIso8601String();
+      // Add affiche dates only if provided
+      if (dateAfficheDebut != null) {
+        formFields['date_affiche_debut'] = dateAfficheDebut.toIso8601String();
+      }
+      if (dateAfficheFin != null) {
+        formFields['date_affiche_fin'] = dateAfficheFin.toIso8601String();
       }
 
       FormData formData = FormData.fromMap(formFields);
@@ -237,7 +241,8 @@ Future<List<Promotion>> fetchAllPromotions() async {
     required double prixOffre,
     required DateTime dateDebut,
     required DateTime dateFin,
-    DateTime? dateAffiche,
+    DateTime? dateAfficheDebut,
+    DateTime? dateAfficheFin,
     required String fournisseurId,
     required String statut,
     required List<Map<String, dynamic>> produits,
@@ -265,7 +270,8 @@ Future<List<Promotion>> fetchAllPromotions() async {
         'statut': statut,
         'produits': jsonEncode(produits),
         'existingAfficheUrls': jsonEncode(existingAfficheUrls),
-        if (dateAffiche != null) 'date_affiche': dateAffiche.toIso8601String(),
+        if (dateAfficheDebut != null) 'date_affiche_debut': dateAfficheDebut.toIso8601String(),
+        if (dateAfficheFin != null) 'date_affiche_fin': dateAfficheFin.toIso8601String(),
       });
 
       // Add affiche images if any

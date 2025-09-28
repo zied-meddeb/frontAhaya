@@ -22,7 +22,7 @@ class ModifyOfferScreen extends StatefulWidget {
 class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
   final PageController _pageController = PageController();
   int _currentStep = 0;
-  final int _totalSteps = 5;
+  final int _totalSteps = 4;
   bool _isSubmitting = false;
   bool _isLoading = true;
   Promotion? _promotion;
@@ -45,7 +45,10 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
   String _selectedRegion = '';
   DateTime? _promotionStartDate;
   DateTime? _promotionEndDate;
+  DateTime? _afficheStartDate;
   DateTime? _afficheEndDate;
+  String? _afficheStartDateError;
+  String? _afficheEndDateError;
   List<Map<String, dynamic>> _selectedProducts = [];
   List<String> _affichesToRemove = [];
 
@@ -123,7 +126,10 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     _selectedType = promotion.type;
     _promotionStartDate = promotion.dateDebut;
     _promotionEndDate = promotion.dateFin;
-    _afficheEndDate = promotion.dateAffiche;
+    _afficheStartDate = promotion.dateAfficheDebut ?? promotion.dateDebut;
+    _afficheEndDate = promotion.dateAfficheFin ?? promotion.dateAfficheDebut;
+    _afficheStartDateError = null;
+    _afficheEndDateError = null;
 
     final locationParts = ["Tunisie", "Ariana", "Test"];
     if (locationParts.length >= 3) {
@@ -854,7 +860,6 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
               onPageChanged: (index) => setState(() => _currentStep = index),
               children: [
                 _buildBasicInfoStep(),
-                _buildLocationStep(),
                 _buildProductSelectionStep(),
                 _buildPricingStep(),
                 _buildTimingStep(),
@@ -1671,19 +1676,63 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
               _buildDateField(
                 'Début de la promotion *',
                 _promotionStartDate,
-                    (date) => setState(() => _promotionStartDate = date),
+                null,
+                    (date) {
+                  setState(() {
+                    _promotionStartDate = date;
+                    // Clear affiche start date error if it becomes valid
+                    if (_afficheStartDate != null && _afficheStartDateError != null && !_afficheStartDate!.isBefore(date)) {
+                      _afficheStartDateError = null;
+                    }
+                  });
+                },
               ),
               const SizedBox(height: 16),
               _buildDateField(
                 'Fin de la promotion *',
                 _promotionEndDate,
-                    (date) => setState(() => _promotionEndDate = date),
+                null,
+                    (date) {
+                  setState(() {
+                    _promotionEndDate = date;
+                    // Clear affiche end date error if it becomes valid
+                    if (_afficheEndDate != null && _afficheEndDateError != null && !_afficheEndDate!.isAfter(date)) {
+                      _afficheEndDateError = null;
+                    }
+                  });
+                },
               ),
               const SizedBox(height: 16),
               _buildDateField(
-                'Date affichage',
+                'Date début affichage *',
+                _afficheStartDate,
+                _afficheStartDateError,
+                    (date) {
+                  setState(() {
+                    _afficheStartDate = date;
+                    if (_promotionStartDate != null && date.isBefore(_promotionStartDate!) && date.isAfter(_afficheEndDate ?? DateTime(2100))) {
+                      _afficheStartDateError = 'Doit être après ou égal à la date de début de la promotion';
+                    } else {
+                      _afficheStartDateError = null;
+                    }
+                  });
+                },
+              ),
+              const SizedBox(height: 16),
+              _buildDateField(
+                'Date fin affichage *',
                 _afficheEndDate,
-                    (date) => setState(() => _afficheEndDate = date),
+                _afficheEndDateError,
+                    (date) {
+                  setState(() {
+                    _afficheEndDate = date;
+                    if (_promotionEndDate != null && date.isAfter(_promotionEndDate!)) {
+                      _afficheEndDateError = 'Doit être avant ou égal à la date de fin de la promotion';
+                    } else {
+                      _afficheEndDateError = null;
+                    }
+                  });
+                },
               ),
               const SizedBox(height: 16),
               TextFormField(
@@ -1701,13 +1750,16 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     );
   }
 
-  Widget _buildDateField(String label, DateTime? value, Function(DateTime) onChanged) {
+  Widget _buildDateField(String label, DateTime? value, String? errorText, Function(DateTime) onChanged) {
     return InkWell(
       onTap: () async {
+        final now = DateTime.now();
+        final firstDate = now;
+        final initialDate = (value != null && value.isAfter(firstDate)) ? value : firstDate;
         final date = await showDatePicker(
           context: context,
-          initialDate: value ?? DateTime.now(),
-          firstDate: DateTime.now(),
+          initialDate: initialDate,
+          firstDate: firstDate,
           lastDate: DateTime.now().add(const Duration(days: 365)),
         );
         if (date != null) onChanged(date);
@@ -1716,6 +1768,13 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
         decoration: InputDecoration(
           labelText: label,
           prefixIcon: const Icon(Icons.calendar_today),
+          errorText: errorText,
+          errorBorder: errorText != null ? const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.red),
+          ) : null,
+          focusedErrorBorder: errorText != null ? const OutlineInputBorder(
+            borderSide: BorderSide(color: Colors.red, width: 2),
+          ) : null,
         ),
         child: Text(
           value != null
@@ -1824,21 +1883,26 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
             _descriptionController.text.isNotEmpty &&
             (_afficheImages.isNotEmpty || (_promotion!.afficheUrls.isNotEmpty && _affichesToRemove.length < _promotion!.afficheUrls.length));
       case 1:
-        return _selectedCountry.isNotEmpty &&
-            _selectedRegion.isNotEmpty &&
-            _locationController.text.isNotEmpty;
-      case 2:
         return _selectedProducts.isNotEmpty;
-      case 3:
+      case 2:
         final original = double.tryParse(_originalPriceController.text);
         final promotional = double.tryParse(_promotionalPriceController.text);
         return original != null &&
             promotional != null &&
             promotional < original;
-      case 4:
-        return _promotionStartDate != null &&
-            _promotionEndDate != null &&
-            _afficheEndDate != null;
+      case 3:
+        if (_promotionStartDate == null || _promotionEndDate == null || _afficheStartDate == null || _afficheEndDate == null) {
+          return false;
+        }
+        // Affiche start date must be after or equal to promotion start date
+        if (_afficheStartDate!.isBefore(_promotionStartDate!)) {
+          return false;
+        }
+        // Affiche end date must be before or equal to promotion end date
+        if (_afficheEndDate!.isAfter(_promotionEndDate!)) {
+          return false;
+        }
+        return true;
       default:
         return false;
     }
@@ -1869,6 +1933,19 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
 
       if (_promotionStartDate == null || _promotionEndDate == null) {
         throw Exception('Les dates de début et fin sont requises');
+      }
+
+      if (_afficheStartDate == null || _afficheEndDate == null) {
+        throw Exception('Les dates d\'affichage sont requises');
+      }
+
+      // Validate affiche date constraints
+      if (_afficheStartDate!.isBefore(_promotionStartDate!)) {
+        throw Exception('La date de début d\'affichage doit être après ou égale à la date de début de la promotion');
+      }
+
+      if (_afficheEndDate!.isAfter(_promotionEndDate!)) {
+        throw Exception('La date de fin d\'affichage doit être avant ou égale à la date de fin de la promotion');
       }
 
       print('DEBUG: Checking ${_selectedProducts.length} selected products');
@@ -1936,7 +2013,8 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
         produits: productsData,
         afficheImages: _afficheImages,
         productImages: manualProductImages,
-        dateAffiche: _afficheEndDate,
+        dateAfficheDebut: _afficheStartDate,
+        dateAfficheFin: _afficheEndDate,
         existingAfficheUrls: _promotion!.afficheUrls.where((url) => !_affichesToRemove.contains(url)).toList(),
         //affichesToRemove: _affichesToRemove,
       );

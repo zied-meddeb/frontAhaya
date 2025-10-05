@@ -20,6 +20,18 @@ class Promotion {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  // Helper method to parse dates from backend (preserve local date)
+  static DateTime _parseDateFromBackend(String dateString) {
+    try {
+      // Parse the date and create a new DateTime in local timezone
+      final parsedDate = DateTime.parse(dateString);
+      return DateTime(parsedDate.year, parsedDate.month, parsedDate.day);
+    } catch (e) {
+      print('Error parsing date: $dateString, error: $e');
+      return DateTime.now();
+    }
+  }
+
   Promotion({
     required this.id,
     required this.fournisseur,
@@ -58,16 +70,24 @@ class Promotion {
       description: (json['description'] ?? '').toString(),
       prixOriginal: (json['prix_original'] ?? 0).toDouble(),
       prixOffre: (json['prix_offre'] ?? 0).toDouble(),
-      dateDebut: json['date_debut'] != null ? DateTime.parse(json['date_debut']) : DateTime.now(),
-      dateFin: json['date_fin'] != null ? DateTime.parse(json['date_fin']) : DateTime.now(),
+      dateDebut: json['date_debut'] != null ? _parseDateFromBackend(json['date_debut']) : DateTime.now(),
+      dateFin: json['date_fin'] != null ? _parseDateFromBackend(json['date_fin']) : DateTime.now(),
       dateAfficheDebut: json['date_affiche_debut'] != null
-          ? DateTime.parse(json['date_affiche_debut'])
-          : (json['date_affiche'] != null ? DateTime.parse(json['date_affiche']) : null),
+          ? _parseDateFromBackend(json['date_affiche_debut'])
+          : (json['date_affiche'] != null ? _parseDateFromBackend(json['date_affiche']) : null),
       dateAfficheFin: json['date_affiche_fin'] != null
-          ? DateTime.parse(json['date_affiche_fin'])
-          : (json['date_affiche'] != null ? DateTime.parse(json['date_affiche']) : null),
+          ? _parseDateFromBackend(json['date_affiche_fin'])
+          : null,
       produits: json['produits'] != null
-          ? List<Map<String, dynamic>>.from(json['produits'])
+          ? (json['produits'] is List
+              ? (json['produits'] as List).map((e) {
+                  if (e is Map<String, dynamic>) {
+                    return e;
+                  } else {
+                    return {'_id': e.toString()};
+                  }
+                }).toList()
+              : [])
           : [],
       statut: (json['statut'] ?? '').toString(),
       createdAt: json['createdAt'] != null
@@ -104,7 +124,7 @@ class Promotion {
       'prix_offre': prixOffre,
       'date_debut': dateDebut.toIso8601String(),
       'date_fin': dateFin.toIso8601String(),
-      if (dateAfficheDebut != null) 'date_affiche_debut': dateAfficheDebut!.toIso8601String(),
+      if (dateAfficheDebut != null) 'date_affiche': dateAfficheDebut!.toIso8601String(),
       if (dateAfficheFin != null) 'date_affiche_fin': dateAfficheFin!.toIso8601String(),
       if (produits != null) 'produits': produits,
       if (statut.isNotEmpty) 'statut': statut,

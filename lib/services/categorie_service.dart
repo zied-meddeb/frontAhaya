@@ -11,7 +11,7 @@ class CategoriesService {
 
   //http://10.0.2.2:3100
   //http://localhost:3100
-  CategoriesService({this.baseUrl = 'http://localhost:3100/api'}) {
+  CategoriesService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -54,7 +54,6 @@ class CategoriesService {
       );
 
       if (response.statusCode == 201) {
-        print("success ${response.data}");
         return response.data;
       } else {
         throw Exception("$response['message']");

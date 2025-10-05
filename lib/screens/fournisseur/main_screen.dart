@@ -6,10 +6,13 @@ import '../../theme/app_theme.dart';
 import 'create_offer_screen.dart';
 import 'my_offers_screen.dart';
 import 'payments_screen.dart';
+import 'catalogue_screen.dart';
 
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  final int? initialTabIndex;
+  
+  const MainScreen({super.key, this.initialTabIndex});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
@@ -21,6 +24,7 @@ class _MainScreenState extends State<MainScreen> {
   final List<Widget> _screens = [
     const CreateOfferScreen(),
     const MyOffersScreen(),
+    const CatalogueScreen(),
     const PaymentsScreen(),
   ];
 
@@ -36,6 +40,11 @@ class _MainScreenState extends State<MainScreen> {
       label: 'Mes Offres',
     ),
     const NavigationDestination(
+      icon: Icon(Icons.inventory_2_outlined),
+      selectedIcon: Icon(Icons.inventory_2),
+      label: 'Catalogue',
+    ),
+    const NavigationDestination(
       icon: Icon(Icons.payment_outlined),
       selectedIcon: Icon(Icons.payment),
       label: 'Paiements',
@@ -45,6 +54,10 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
+    // Set initial tab index if provided
+    if (widget.initialTabIndex != null) {
+      _currentIndex = widget.initialTabIndex!;
+    }
     // Charger les données au démarrage
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<OfferProvider>().loadOffers();

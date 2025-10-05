@@ -87,8 +87,8 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
         setState(() {
           _promotion = Promotion.fromJson(promotionData);
           _initializeForm();
-          _products = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
-          _selectedProducts = List<Map<String, dynamic>>.from(promotionData['produits'] ?? []);
+          // Initialize products list with the promotion's products
+          _selectedProducts = List<Map<String, dynamic>>.from(_promotion!.produits ?? []);
           _isLoading = false;
         });
         _updateOriginalPrice();
@@ -119,24 +119,30 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
   void _initializeForm() {
     if (_promotion == null) return;
     final promotion = _promotion!;
+    
+    // Set text controllers
     _titreController.text = promotion.titre;
     _descriptionController.text = promotion.description;
     _originalPriceController.text = promotion.prixOriginal.toStringAsFixed(2);
     _promotionalPriceController.text = promotion.prixOffre.toStringAsFixed(2);
+    
+    // Set type
     _selectedType = promotion.type;
+    
+    // Set dates
     _promotionStartDate = promotion.dateDebut;
     _promotionEndDate = promotion.dateFin;
-    _afficheStartDate = promotion.dateAfficheDebut ?? promotion.dateDebut;
-    _afficheEndDate = promotion.dateAfficheFin ?? promotion.dateAfficheDebut;
+    _afficheStartDate = promotion.dateAfficheDebut;
+    _afficheEndDate = promotion.dateAfficheFin;
+    
+    // Clear date errors
     _afficheStartDateError = null;
     _afficheEndDateError = null;
 
-    final locationParts = ["Tunisie", "Ariana", "Test"];
-    if (locationParts.length >= 3) {
-      _selectedCountry = locationParts[0];
-      _selectedRegion = locationParts[1];
-      _locationController.text = locationParts[2];
-    }
+    // Set default location (you might want to store this in the promotion data)
+    _selectedCountry = 'Tunisie';
+    _selectedRegion = 'Ariana';
+    _locationController.text = 'Test';
   }
 
   Future<void> _fetchProducts() async {
@@ -357,7 +363,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
           '_id': 'manual_${DateTime.now().millisecondsSinceEpoch}',
           'nom': _newProductNameController.text,
           'name': _newProductNameController.text,
-          'prix': double.parse(_newProductPriceController.text),
+          'price': double.parse(_newProductPriceController.text),
           'description': _newProductNameController.text,
           'imageFile': _newProductImage,
           'image': _newProductImage?.path,
@@ -393,9 +399,9 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       0,
           (sum, product) {
         if (product['isManual'] == true) {
-          return sum + (product['prix'] as double);
+          return sum + (product['price'] as double);
         } else {
-          final price = product['prix'] ?? product['prix'] ?? 0;
+          final price = product['prix'] ?? 0;
           return sum + (price is String ? double.tryParse(price) ?? 0 : price.toDouble());
         }
       },
@@ -416,7 +422,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
     }
 
     _newProductNameController.text = product['nom'] ?? product['name'] ?? '';
-    _newProductPriceController.text = product['prix'].toString();
+    _newProductPriceController.text = product['price'].toString();
     _newProductImage = product['imageFile'] as XFile?;
     final categoryId = product['category']?.toString();
     if (categoryId != null && _categories.any((cat) => cat['_id']?.toString() == categoryId)) {
@@ -530,7 +536,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
                     '_id': product['_id'] ?? product['id'],
                     'nom': _newProductNameController.text,
                     'name': _newProductNameController.text,
-                    'prix': double.parse(_newProductPriceController.text),
+                    'price': double.parse(_newProductPriceController.text),
                     'description': _newProductNameController.text,
                     'imageFile': _newProductImage,
                     'image': _newProductImage?.path,
@@ -1970,6 +1976,14 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
       print('Total product images collected: ${manualProductImages.length}');
 
       final List<Map<String, dynamic>> productsData = _selectedProducts.map((product) {
+        // Handle category field properly - it could be a String or a Map
+        String categoryId;
+        if (product['category'] is Map<String, dynamic>) {
+          categoryId = product['category']['_id']?.toString() ?? product['category'].toString();
+        } else {
+          categoryId = product['category']?.toString() ?? '';
+        }
+        
         return {
           'nom': product['nom'] ?? product['name'],
           'description': product['description'] ?? 'Produit ajouté pour la promotion: ${product['nom'] ?? product['name']}',
@@ -1977,7 +1991,7 @@ class _ModifyOfferScreenState extends State<ModifyOfferScreen> {
           'verified': false,
           'views': 0,
           'tags': product['tags'] ?? [_selectedType.toLowerCase()],
-          'category': product['category'],
+          'category': categoryId,
           'fournisseur': fournisseurId,
           'imageUrl': product['imageUrl'],
         };

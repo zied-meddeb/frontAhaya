@@ -8,6 +8,8 @@ import '../../widgets/gradient_button.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'my_offers_screen.dart';
+import 'main_screen.dart';
 
 class CreateOfferScreen extends StatefulWidget {
   const CreateOfferScreen({super.key});
@@ -35,8 +37,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   XFile? _newProductImage;
 
   String _selectedType = 'Biens';
-  String _selectedCountry = '';
-  String _selectedRegion = '';
   DateTime? _promotionStartDate;
   DateTime? _promotionEndDate;
   DateTime? _afficheStartDate;
@@ -44,15 +44,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   String? _afficheStartDateError;
   String? _afficheEndDateError;
   List<Map<String, dynamic>> _selectedProducts = [];
+  List<Map<String, dynamic>> _tempSelectedProducts = []; // Temporary selection for product modal
 
   final List<String> _types = ['Biens', 'Services'];
-  final List<String> _countries = ['Tunisie'];
-  final List<String> _tunisianGovernorates = [
-    'Tunis', 'Ariana', 'Ben Arous', 'Manouba', 'Nabeul', 'Zaghouan',
-    'Bizerte', 'Béja', 'Jendouba', 'Kef', 'Siliana', 'Sousse',
-    'Monastir', 'Mahdia', 'Sfax', 'Kairouan', 'Kasserine', 'Sidi Bouzid',
-    'Gabès', 'Médenine', 'Tataouine', 'Gafsa', 'Tozeur', 'Kebili',
-  ];
   List<Map<String, dynamic>> _products = [];
   List<dynamic> _categories = [];
   String? _selectedCategoryId;
@@ -151,13 +145,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Navigator.pop(context);
                   final XFile? image = await _picker.pickImage(
                     source: ImageSource.camera,
-                    maxWidth: 1024,
-                    maxHeight: 1024,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    imageQuality: 85,
                   );
                   if (image != null) {
-                    setState(() {
-                      _afficheImages.add(image);
-                    });
+                    await _addAfficheImage(image);
                   }
                 },
               ),
@@ -168,13 +161,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Navigator.pop(context);
                   final XFile? image = await _picker.pickImage(
                     source: ImageSource.gallery,
-                    maxWidth: 1024,
-                    maxHeight: 1024,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    imageQuality: 85,
                   );
                   if (image != null) {
-                    setState(() {
-                      _afficheImages.add(image);
-                    });
+                    await _addAfficheImage(image);
                   }
                 },
               ),
@@ -184,13 +176,14 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                 onTap: () async {
                   Navigator.pop(context);
                   final List<XFile> images = await _picker.pickMultiImage(
-                    maxWidth: 1024,
-                    maxHeight: 1024,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    imageQuality: 85,
                   );
                   if (images.isNotEmpty) {
-                    setState(() {
-                      _afficheImages.addAll(images);
-                    });
+                    for (final image in images) {
+                      await _addAfficheImage(image);
+                    }
                   }
                 },
               ),
@@ -199,12 +192,32 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         ),
       );
     } catch (e) {
+      _showValidationError('Erreur lors de la sélection des images: ${e.toString()}');
+    }
+  }
+
+  Future<void> _addAfficheImage(XFile image) async {
+    try {
+      // Check file size (max 5MB)
+      final bytes = await image.readAsBytes();
+      if (bytes.length > 5 * 1024 * 1024) {
+        _showValidationError('L\'image est trop volumineuse. Taille maximale: 5MB');
+        return;
+      }
+      
+      setState(() {
+        _afficheImages.add(image);
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la sélection des images: $e'),
-          backgroundColor: SupplierTheme.mediumGray,
+        const SnackBar(
+          content: Text('Image ajoutée avec succès'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
         ),
       );
+    } catch (e) {
+      _showValidationError('Erreur lors de l\'ajout de l\'image: ${e.toString()}');
     }
   }
 
@@ -230,13 +243,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Navigator.pop(context);
                   final XFile? image = await _picker.pickImage(
                     source: ImageSource.camera,
-                    maxWidth: 1024,
-                    maxHeight: 1024,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    imageQuality: 85,
                   );
                   if (image != null) {
-                    setState(() {
-                      _newProductImage = image;
-                    });
+                    await _setProductImage(image);
                   }
                 },
               ),
@@ -247,13 +259,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   Navigator.pop(context);
                   final XFile? image = await _picker.pickImage(
                     source: ImageSource.gallery,
-                    maxWidth: 1024,
-                    maxHeight: 1024,
+                    maxWidth: 2048,
+                    maxHeight: 2048,
+                    imageQuality: 85,
                   );
                   if (image != null) {
-                    setState(() {
-                      _newProductImage = image;
-                    });
+                    await _setProductImage(image);
                   }
                 },
               ),
@@ -262,49 +273,88 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         ),
       );
     } catch (e) {
+      _showValidationError('Erreur lors de la sélection de l\'image: ${e.toString()}');
+    }
+  }
+
+  Future<void> _setProductImage(XFile image) async {
+    try {
+      // Check file size (max 5MB)
+      final bytes = await image.readAsBytes();
+      if (bytes.length > 5 * 1024 * 1024) {
+        _showValidationError('L\'image est trop volumineuse. Taille maximale: 5MB');
+        return;
+      }
+      
+      setState(() {
+        _newProductImage = image;
+      });
+      
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur lors de la sélection de l\'image: $e'),
-          backgroundColor: SupplierTheme.mediumGray,
+        const SnackBar(
+          content: Text('Image sélectionnée avec succès'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 1),
         ),
       );
+    } catch (e) {
+      _showValidationError('Erreur lors de la sélection de l\'image: ${e.toString()}');
     }
   }
 
   void _addNewProduct() {
-    if (_newProductNameController.text.isNotEmpty &&
-        _newProductPriceController.text.isNotEmpty &&
-        _selectedCategoryId != null) {
-      setState(() {
-        _selectedProducts.add({
-          '_id': 'manual_${DateTime.now().millisecondsSinceEpoch}',
-          'nom': _newProductNameController.text, // Use 'nom' to match backend
-          'name': _newProductNameController.text, // Keep for backward compatibility
-          'price': double.parse(_newProductPriceController.text),
-          'description': _newProductNameController.text, // Add description
-          'imageFile': _newProductImage, // Store the XFile object directly
-          'image': _newProductImage?.path, // Keep path for backward compatibility
-          'imageUrl': _newProductImage?.path, // Add imageUrl for consistency
-          'category': _selectedCategoryId,
-          'isManual': true,
-          'verified': false, // Add default values
-          'views': 0,
-          'tags': [_selectedType.toLowerCase()],
-        });
-        _newProductNameController.clear();
-        _newProductPriceController.clear();
-        _newProductImage = null;
-        _selectedCategoryId = null;
-        _updateOriginalPrice();
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez remplir tous les champs obligatoires'),
-          backgroundColor: SupplierTheme.mediumGray,
-        ),
-      );
+    // Validate required fields
+    if (_newProductNameController.text.trim().isEmpty) {
+      _showValidationError('Le nom du produit est requis');
+      return;
     }
+    
+    if (_newProductPriceController.text.trim().isEmpty) {
+      _showValidationError('Le prix du produit est requis');
+      return;
+    }
+    
+    final price = double.tryParse(_newProductPriceController.text);
+    if (price == null || price <= 0) {
+      _showValidationError('Veuillez entrer un prix valide');
+      return;
+    }
+    
+    if (_selectedCategoryId == null || _selectedCategoryId!.isEmpty) {
+      _showValidationError('Veuillez sélectionner une catégorie');
+      return;
+    }
+
+    setState(() {
+      _selectedProducts.add({
+        '_id': 'manual_${DateTime.now().millisecondsSinceEpoch}',
+        'nom': _newProductNameController.text.trim(),
+        'name': _newProductNameController.text.trim(),
+        'price': price,
+        'description': _newProductNameController.text.trim(),
+        'imageFile': _newProductImage,
+        'image': _newProductImage?.path,
+        'imageUrl': _newProductImage?.path,
+        'category': _selectedCategoryId,
+        'isManual': true,
+        'verified': false,
+        'views': 0,
+        'tags': [_selectedType.toLowerCase()],
+      });
+      _newProductNameController.clear();
+      _newProductPriceController.clear();
+      _newProductImage = null;
+      _selectedCategoryId = null;
+      _updateOriginalPrice();
+    });
+    
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Produit ajouté avec succès'),
+        backgroundColor: Colors.green,
+        duration: Duration(seconds: 2),
+      ),
+    );
   }
 
   void _updateOriginalPrice() {
@@ -496,6 +546,9 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   }
 
   Future<void> _showProductSelectionBottomSheet() async {
+    // Initialize temp selection with currently selected products
+    _tempSelectedProducts = List<Map<String, dynamic>>.from(_selectedProducts);
+    
     await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -507,7 +560,8 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         maxChildSize: 0.9,
         minChildSize: 0.5,
         expand: false,
-        builder: (context, scrollController) => Column(
+        builder: (context, scrollController) => StatefulBuilder(
+          builder: (context, setModalState) => Column(
           children: [
             // Header
             Container(
@@ -527,7 +581,10 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      _tempSelectedProducts.clear();
+                      Navigator.pop(context);
+                    },
                     icon: const Icon(Icons.close, color: Colors.white),
                   ),
                 ],
@@ -551,7 +608,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                   : Padding(
                       padding: const EdgeInsets.all(16),
                       child: GridView.builder(
-                        controller: scrollController,
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
                           childAspectRatio: 0.75,
@@ -561,17 +617,16 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                         itemCount: _products.length,
                         itemBuilder: (context, index) {
                           final product = _products[index];
-                          final isSelected = _selectedProducts.any((p) => p['_id'] == product['_id']);
+                          final isSelected = _tempSelectedProducts.any((p) => p['_id'] == product['_id']);
                           
                           return GestureDetector(
                             onTap: () {
-                              setState(() {
+                              setModalState(() {
                                 if (isSelected) {
-                                  _selectedProducts.removeWhere((p) => p['_id'] == product['_id']);
+                                  _tempSelectedProducts.removeWhere((p) => p['_id'] == product['_id']);
                                 } else {
-                                  _selectedProducts.add(product);
+                                  _tempSelectedProducts.add(product);
                                 }
-                                _updateOriginalPrice();
                               });
                             },
                             child: Container(
@@ -579,16 +634,20 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                   color: isSelected ? SupplierTheme.primaryBlack : SupplierTheme.mediumGray,
-                                  width: isSelected ? 2 : 1,
+                                  width: isSelected ? 3 : 1,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.05),
-                                    blurRadius: 5,
+                                    color: isSelected 
+                                        ? SupplierTheme.primaryBlack.withOpacity(0.2)
+                                        : Colors.black.withOpacity(0.05),
+                                    blurRadius: isSelected ? 8 : 5,
                                     offset: const Offset(0, 2),
                                   ),
                                 ],
-                                color: Colors.white,
+                                color: isSelected 
+                                    ? SupplierTheme.primaryBlack.withOpacity(0.05)
+                                    : Colors.white,
                               ),
                               child: Stack(
                                 children: [
@@ -723,16 +782,49 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               ),
               child: Row(
                 children: [
-                  Text(
-                    '${_selectedProducts.length} produit(s) sélectionné(s)',
-                    style: TextStyle(
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: _tempSelectedProducts.isNotEmpty 
+                              ? SupplierTheme.primaryBlack.withOpacity(0.1)
+                              : Colors.grey.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Text(
+                          '${_tempSelectedProducts.length}',
+                          style: TextStyle(
+                            color: _tempSelectedProducts.isNotEmpty 
+                                ? SupplierTheme.primaryBlack
+                                : Colors.grey[600],
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'produit(s) sélectionné(s)',
+                        style: TextStyle(
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
+                 const Spacer(),
+                  
+                  const SizedBox(width: 12),
                   GradientButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () {
+                      setState(() {
+                        _selectedProducts = List<Map<String, dynamic>>.from(_tempSelectedProducts);
+                        _updateOriginalPrice();
+                      });
+                      _tempSelectedProducts.clear(); // Clear temp selection
+                      Navigator.pop(context);
+                    },
                     gradient: SupplierTheme.blackGradient,
                     child: const Text('Confirmer', style: TextStyle(color: Colors.white)),
                   ),
@@ -740,6 +832,7 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
               ),
             ),
           ],
+        ),
         ),
       ),
     );
@@ -995,120 +1088,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     );
   }
 
-  Widget _buildLocationStep() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      gradient: SupplierTheme.grayGradient,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: const Icon(Icons.location_on, color: Colors.white),
-                  ),
-                  const SizedBox(width: 16),
-                  const Text(
-                    'Localisation',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              Column(
-                children: [
-                  DropdownButtonFormField<String>(
-                    value: _selectedCountry.isEmpty ? null : _selectedCountry,
-                    decoration: const InputDecoration(
-                      labelText: 'Pays *',
-                      prefixIcon: Icon(Icons.flag),
-                    ),
-                    items: _countries.map((country) => DropdownMenuItem(
-                      value: country,
-                      child: Text('🇹🇳 $country'),
-                    )).toList(),
-                    onChanged: (value) {
-                      if (value != _selectedCountry) {
-                        setState(() => _selectedCountry = value ?? '');
-                      }
-                    },
-                    validator: (value) => value == null ? 'Pays requis' : null,
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedRegion.isEmpty ? null : _selectedRegion,
-                    decoration: const InputDecoration(
-                      labelText: 'Gouvernorat *',
-                      prefixIcon: Icon(Icons.map),
-                    ),
-                    items: _tunisianGovernorates.map((gov) => DropdownMenuItem(
-                      value: gov,
-                      child: Text(gov),
-                    )).toList(),
-                    onChanged: (value) {
-                      if (value != _selectedRegion) {
-                        setState(() => _selectedRegion = value ?? '');
-                      }
-                    },
-                    validator: (value) => value == null ? 'Gouvernorat requis' : null,
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 16),
-
-              TextFormField(
-                // controller: _locationController, // Commented out - location step removed
-                decoration: const InputDecoration(
-                  labelText: 'Lieu précis *',
-                  prefixIcon: Icon(Icons.place),
-                  hintText: 'Ex: Sidi Bou Saïd, La Marsa, Centre-ville',
-                ),
-                validator: (value) => value?.isEmpty == true ? 'Lieu requis' : null,
-              ),
-
-              const SizedBox(height: 24),
-
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [Colors.green[50]!, Colors.blue[50]!],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Icon(Icons.lightbulb, color: Colors.orange),
-                    SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('💡 Conseil', style: TextStyle(fontWeight: FontWeight.bold)),
-                          Text('Plus votre localisation est précise, plus il sera facile pour les clients tunisiens de vous trouver.'),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildProductSelectionStep() {
     return SingleChildScrollView(
@@ -1746,28 +1725,79 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
   bool _validateCurrentStep() {
     switch (_currentStep) {
       case 0:
-        return _selectedType.isNotEmpty &&
-            _titreController.text.isNotEmpty &&
-            _descriptionController.text.isNotEmpty &&
-            _afficheImages.isNotEmpty;
+        if (_selectedType.isEmpty) {
+          _showValidationError('Veuillez sélectionner un type de promotion');
+          return false;
+        }
+        if (_titreController.text.trim().isEmpty) {
+          _showValidationError('Le titre est requis');
+          return false;
+        }
+        if (_descriptionController.text.trim().isEmpty) {
+          _showValidationError('La description est requise');
+          return false;
+        }
+        if (_afficheImages.isEmpty) {
+          _showValidationError('Au moins une image de promotion est requise');
+          return false;
+        }
+        return true;
       case 1:
-        return _selectedProducts.isNotEmpty;
+        if (_selectedProducts.isEmpty) {
+          _showValidationError('Veuillez sélectionner au moins un produit');
+          return false;
+        }
+        // Validate that manual products have categories
+        for (var product in _selectedProducts) {
+          if (product['isManual'] == true && (product['category'] == null || product['category'].toString().isEmpty)) {
+            _showValidationError('Une catégorie doit être sélectionnée pour tous les produits manuels');
+            return false;
+          }
+        }
+        return true;
       case 2:
         final original = double.tryParse(_originalPriceController.text);
         final promotional = double.tryParse(_promotionalPriceController.text);
-        return original != null &&
-            promotional != null &&
-            promotional < original;
+        if (original == null || original <= 0) {
+          _showValidationError('Prix original invalide');
+          return false;
+        }
+        if (promotional == null || promotional <= 0) {
+          _showValidationError('Prix promotionnel invalide');
+          return false;
+        }
+        if (promotional >= original) {
+          _showValidationError('Le prix promotionnel doit être inférieur au prix original');
+          return false;
+        }
+        return true;
       case 3:
-        if (_promotionStartDate == null || _promotionEndDate == null || _afficheStartDate == null || _afficheEndDate == null) {
+        if (_promotionStartDate == null) {
+          _showValidationError('Date de début de promotion requise');
           return false;
         }
-        // Affiche start date must be after or equal to promotion start date
+        if (_promotionEndDate == null) {
+          _showValidationError('Date de fin de promotion requise');
+          return false;
+        }
+        if (_afficheStartDate == null) {
+          _showValidationError('Date de début d\'affichage requise');
+          return false;
+        }
+        if (_afficheEndDate == null) {
+          _showValidationError('Date de fin d\'affichage requise');
+          return false;
+        }
+        if (_promotionEndDate!.isBefore(_promotionStartDate!)) {
+          _showValidationError('La date de fin doit être après la date de début');
+          return false;
+        }
         if (_afficheStartDate!.isBefore(_promotionStartDate!)) {
+          _showValidationError('La date de début d\'affichage doit être après ou égale à la date de début de la promotion');
           return false;
         }
-        // Affiche end date must be before or equal to promotion end date
         if (_afficheEndDate!.isAfter(_promotionEndDate!)) {
+          _showValidationError('La date de fin d\'affichage doit être avant ou égale à la date de fin de la promotion');
           return false;
         }
         return true;
@@ -1776,14 +1806,18 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
     }
   }
 
+  void _showValidationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red[600],
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
   Future<void> _submitOffer() async {
     if (!_validateCurrentStep()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez corriger les erreurs avant de continuer'),
-          backgroundColor: SupplierTheme.mediumGray,
-        ),
-      );
       return;
     }
 
@@ -1793,40 +1827,12 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       // Get the current fournisseur ID
       final fournisseurId = await _authService.getUserId();
       if (fournisseurId == null) {
-        throw Exception('Utilisateur non connecté');
-      }
-
-      // Validate required fields
-      if (_afficheImages.isEmpty) {
-        throw Exception('Au moins une image de promotion est requise');
-      }
-
-      if (_selectedProducts.isEmpty) {
-        throw Exception('Au moins un produit doit être sélectionné');
-      }
-
-      if (_promotionStartDate == null || _promotionEndDate == null) {
-        throw Exception('Les dates de début et fin sont requises');
-      }
-
-      if (_afficheStartDate == null || _afficheEndDate == null) {
-        throw Exception('Les dates d\'affichage sont requises');
-      }
-
-      // Validate affiche date constraints
-      if (_afficheStartDate!.isBefore(_promotionStartDate!)) {
-        throw Exception('La date de début d\'affichage doit être après ou égale à la date de début de la promotion');
-      }
-
-      if (_afficheEndDate!.isAfter(_promotionEndDate!)) {
-        throw Exception('La date de fin d\'affichage doit être avant ou égale à la date de fin de la promotion');
+        throw Exception('Session expirée. Veuillez vous reconnecter.');
       }
 
       // Validate that a category is selected for manual products
-      print('DEBUG: Checking ${_selectedProducts.length} selected products');
       for (int i = 0; i < _selectedProducts.length; i++) {
         var product = _selectedProducts[i];
-        print('DEBUG: Product $i: ${product.toString()}');
         if (product['isManual'] == true && (product['category'] == null || product['category'].toString().isEmpty)) {
           throw Exception('Une catégorie doit être sélectionnée pour tous les produits manuels');
         }
@@ -1834,71 +1840,52 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
 
       // Collect manual product images separately
       List<XFile> manualProductImages = [];
-      print('DEBUG: Collecting product images from ${_selectedProducts.length} products');
       for (var product in _selectedProducts) {
-        print('DEBUG: Product ${product['name']} - isManual: ${product['isManual']}, hasImageFile: ${product['imageFile'] != null}');
         if (product['isManual'] == true && product['imageFile'] != null) {
-          print('Adding manual product image: ${product['imageFile'].name}');
           manualProductImages.add(product['imageFile'] as XFile);
         }
       }
-      
-      print('Total manual product images collected: ${manualProductImages.length}');
 
       // Prepare products data according to backend schema
       final List<Map<String, dynamic>> productsData = _selectedProducts.map((product) {
         if (product['isManual'] == true) {
           // Manual product - create new product data according to IProduit schema
           return {
-            'nom': product['nom'] ?? product['name'],
-            'description': product['description'] ?? 'Produit ajouté pour la promotion: ${product['nom'] ?? product['name']}',
-            'prix': product['price'],
+            'nom': (product['nom'] ?? product['name'])?.toString() ?? '',
+            'description': (product['description'] ?? 'Produit ajouté pour la promotion: ${product['nom'] ?? product['name']}')?.toString() ?? '',
+            'prix': product['price'] is double ? product['price'] : (product['price'] is String ? double.tryParse(product['price']) ?? 0.0 : 0.0),
             'verified': false,
             'views': 0,
-            'tags': product['tags'] ?? [_selectedType.toLowerCase()],
-            'category': product['category'], // Use category from the product object
+            'tags': product['tags'] is List ? product['tags'] : [_selectedType.toLowerCase()],
+            'category': product['category']?.toString() ?? '',
             'fournisseur': fournisseurId,
             'isManual': true, // Mark as manual for backend processing
           };
         } else {
           // Existing product - ensure it has all required fields
+          // Handle category field properly - it could be a String or a Map
+          String categoryId;
+          if (product['category'] is Map<String, dynamic>) {
+            categoryId = product['category']['_id']?.toString() ?? product['category'].toString();
+          } else {
+            categoryId = product['category']?.toString() ?? '';
+          }
+          
           return {
-            'nom': product['nom'] ?? product['name'],
-            'description': product['description'] ?? product['nom'] ?? product['name'],
-            'imageUrl': product['imageUrl'] ?? product['image'],
-            'verified': product['verified'] ?? false,
-            'views': product['views'] ?? 0,
-            'tags': product['tags'] ?? [_selectedType.toLowerCase()],
-            'category': product['category']['_id'] ?? product['category'],
-            'fournisseur': product['fournisseur'] ?? fournisseurId,
+            'nom': (product['nom'] ?? product['name'])?.toString() ?? '',
+            'description': (product['description'] ?? product['nom'] ?? product['name'])?.toString() ?? '',
+            'prix': product['prix'] is double ? product['prix'] : (product['prix'] is String ? double.tryParse(product['prix']) ?? 0.0 : 0.0),
+            'imageUrl': product['imageUrl']?.toString() ?? product['image']?.toString() ?? '',
+            'verified': product['verified'] == true,
+            'views': product['views'] is int ? product['views'] : 0,
+            'tags': product['tags'] is List ? product['tags'] : [_selectedType.toLowerCase()],
+            'category': categoryId,
+            'fournisseur': product['fournisseur']?.toString() ?? fournisseurId,
           };
         }
       }).toList();
 
-      // Create the full location string (for potential future use)
-      final location = 'Tunisie, Ariana, Centre-ville';
-      
-      // Debug: Print the data being sent
-      print('Creating promotion with:');
-      print('Type: $_selectedType');
-      print('Titre: ${_titreController.text}');
-      print('Description: ${_descriptionController.text}');
-      print('Products count: ${productsData.length}');
-      print('Manual product images count: ${manualProductImages.length}');
-      print('Location: $location');
-      print('Original price: ${_originalPriceController.text}');
-      print('Promotional price: ${_promotionalPriceController.text}');
-      print('productsData: $productsData');
-      print('Selected products raw: $_selectedProducts');
-
-      print('DEBUG: About to call createPromotion with:');
-      print('  - Affiche images: ${_afficheImages.length}');
-      print('  - Product images: ${manualProductImages.length}');
-      for (int i = 0; i < manualProductImages.length; i++) {
-        print('    Product image $i: ${manualProductImages[i].name}');
-      }
-
-      final createdPromotion = await _promotionService.createPromotion(
+      await _promotionService.createPromotion(
         type: _selectedType,
         titre:_titreController.text,
         description: _descriptionController.text,
@@ -1915,7 +1902,6 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
         productImages: manualProductImages, // Add product images
       );
 
-      print('Promotion created successfully: ${createdPromotion.id}');
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -1934,29 +1920,35 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
           ),
         );
 
-        _resetForm();
-        
-        // Navigate back to the previous screen after a short delay
+        // Navigate back to main screen with Mes Offres tab active
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            Navigator.of(context).pop();
+            Navigator.of(context).popUntil((route) => route.isFirst);
+            // Navigate to main screen with tab index 1 (Mes Offres)
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (context) => const MainScreen(initialTabIndex: 1),
+              ),
+            );
           }
         });
       }
     } catch (e) {
-      print('Error creating promotion: $e');
       if (mounted) {
         String errorMessage = 'Erreur lors de la création de la promotion';
         
         // Provide more specific error messages based on the error type
-        if (e.toString().contains('network') || e.toString().contains('connection')) {
-          errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
-        } else if (e.toString().contains('validation')) {
+        final errorString = e.toString().toLowerCase();
+        if (errorString.contains('network') || errorString.contains('connection') || errorString.contains('timeout')) {
+          errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet et réessayez.';
+        } else if (errorString.contains('validation') || errorString.contains('invalid')) {
           errorMessage = 'Erreur de validation des données. Vérifiez les informations saisies.';
-        } else if (e.toString().contains('unauthorized') || e.toString().contains('401')) {
+        } else if (errorString.contains('unauthorized') || errorString.contains('401') || errorString.contains('403')) {
           errorMessage = 'Session expirée. Veuillez vous reconnecter.';
-        } else if (e.toString().contains('file') || e.toString().contains('image')) {
-          errorMessage = 'Erreur lors du téléchargement de l\'image. Réessayez avec une autre image.';
+        } else if (errorString.contains('file') || errorString.contains('image') || errorString.contains('upload')) {
+          errorMessage = 'Erreur lors du téléchargement des images. Réessayez avec d\'autres images.';
+        } else if (errorString.contains('server') || errorString.contains('500')) {
+          errorMessage = 'Erreur du serveur. Veuillez réessayer plus tard.';
         }
         
         ScaffoldMessenger.of(context).showSnackBar(
@@ -2003,15 +1995,19 @@ class _CreateOfferScreenState extends State<CreateOfferScreen> {
       _afficheStartDateError = null;
       _afficheEndDateError = null;
       _selectedProducts = [];
+      _tempSelectedProducts = [];
       _newProductImage = null;
       _afficheImages.clear();
       _currentStep = 0;
     });
 
-    _pageController.animateToPage(
-      0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeInOut,
-    );
+    // Only animate to page 0 if the PageController is attached
+    if (_pageController.hasClients) {
+      _pageController.animateToPage(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 }

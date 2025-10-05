@@ -13,7 +13,13 @@ class PromotionService {
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
+  // Helper method to format dates for backend (preserve local date)
+  String _formatDateForBackend(DateTime date) {
+    // Format as YYYY-MM-DD to preserve the local date without timezone conversion
+    return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T00:00:00.000Z';
+  }
+
+  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -64,7 +70,6 @@ Future<List<Promotion>> fetchAllPromotions() async {
     List<XFile>? productImages, // Add product images parameter
   }) async {
     try {
-      print('PromotionService: Creating promotion with ${productImages?.length ?? 0} product images');
       
       // Create FormData for multipart request
       Map<String, dynamic> formFields = {
@@ -73,8 +78,8 @@ Future<List<Promotion>> fetchAllPromotions() async {
         'description': description,
         'prix_original': prixOriginal,
         'prix_offre': prixOffre,
-        'date_debut': dateDebut.toIso8601String(),
-        'date_fin': dateFin.toIso8601String(),
+        'date_debut': _formatDateForBackend(dateDebut),
+        'date_fin': _formatDateForBackend(dateFin),
         'Fournisseur': fournisseurId,
         'statut': statut,
         'produits': jsonEncode(produits), 
@@ -82,10 +87,10 @@ Future<List<Promotion>> fetchAllPromotions() async {
 
       // Add affiche dates only if provided
       if (dateAfficheDebut != null) {
-        formFields['date_affiche_debut'] = dateAfficheDebut.toIso8601String();
+        formFields['date_affiche'] = _formatDateForBackend(dateAfficheDebut);
       }
       if (dateAfficheFin != null) {
-        formFields['date_affiche_fin'] = dateAfficheFin.toIso8601String();
+        formFields['date_affiche_fin'] = _formatDateForBackend(dateAfficheFin);
       }
 
       FormData formData = FormData.fromMap(formFields);
@@ -119,14 +124,11 @@ Future<List<Promotion>> fetchAllPromotions() async {
 
       // Add product images if provided
       if (productImages != null && productImages.isNotEmpty) {
-        print('PromotionService: Adding ${productImages.length} product images to FormData');
         for (int i = 0; i < productImages.length; i++) {
           final image = productImages[i];
-          print('PromotionService: Adding product image ${i + 1}: ${image.name}');
           if (kIsWeb) {
             // For web platform, read bytes directly
             final bytes = await image.readAsBytes();
-            print('PromotionService: Web - Adding product image bytes (${bytes.length} bytes)');
             formData.files.add(MapEntry(
               'productImages', // Backend expects 'productImages' for product images
               MultipartFile.fromBytes(
@@ -136,7 +138,6 @@ Future<List<Promotion>> fetchAllPromotions() async {
             ));
           } else {
             // For mobile platforms, use fromFile
-            print('PromotionService: Mobile - Adding product image from file path: ${image.path}');
             formData.files.add(MapEntry(
               'productImages',
               await MultipartFile.fromFile(
@@ -146,18 +147,8 @@ Future<List<Promotion>> fetchAllPromotions() async {
             ));
           }
         }
-      } else {
-        print('PromotionService: No product images provided or list is empty');
-        print('PromotionService: productImages == null: ${productImages == null}');
-        print('PromotionService: productImages isEmpty: ${productImages?.isEmpty}');
       }
 
-      print('PromotionService: Final FormData files count: ${formData.files.length}');
-      print('PromotionService: FormData files:');
-      for (var file in formData.files) {
-        print('  - ${file.key}: ${file.value.filename}');
-      }
-      print("form dataaaaa: ${formData.fields}");
       final response = await dio.post(
         '/promotion/',
         data: formData,
@@ -196,7 +187,6 @@ Future<List<Promotion>> fetchAllPromotions() async {
   Future<List<Map<String, dynamic>>> fetchPromotionsByFournisseurId(String fournisseurId) async {
     try {
       final token = await _auth.getAuthToken();
-      print('Fetching promotions for fournisseurId: $fournisseurId with token: $token');
       final response = await dio.get(
         '/promotion/fournisseur/$fournisseurId',
         options: Options(
@@ -264,14 +254,14 @@ Future<List<Promotion>> fetchAllPromotions() async {
         'description': description,
         'prix_original': prixOriginal.toString(),
         'prix_offre': prixOffre.toString(),
-        'date_debut': dateDebut.toIso8601String(),
-        'date_fin': dateFin.toIso8601String(),
+        'date_debut': _formatDateForBackend(dateDebut),
+        'date_fin': _formatDateForBackend(dateFin),
         'Fournisseur': fournisseurId,
         'statut': statut,
         'produits': jsonEncode(produits),
         'existingAfficheUrls': jsonEncode(existingAfficheUrls),
-        if (dateAfficheDebut != null) 'date_affiche_debut': dateAfficheDebut.toIso8601String(),
-        if (dateAfficheFin != null) 'date_affiche_fin': dateAfficheFin.toIso8601String(),
+        if (dateAfficheDebut != null) 'date_affiche': _formatDateForBackend(dateAfficheDebut),
+        if (dateAfficheFin != null) 'date_affiche_fin': _formatDateForBackend(dateAfficheFin),
       });
 
       // Add affiche images if any
@@ -323,7 +313,6 @@ Future<List<Promotion>> fetchAllPromotions() async {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        print('Promotion updated successfully: ${response.data}');
         final responseData = response.data;
         if (responseData['data'] != null && responseData['data']['data'] != null) {
           return Promotion.fromJson(responseData['data']['data']);

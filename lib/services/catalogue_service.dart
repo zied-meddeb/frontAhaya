@@ -3,15 +3,16 @@ import 'package:image_picker/image_picker.dart';
 
 import 'auth_service.dart';
 import 'dio_interceptor.dart';
+import '../config/environment.dart';
 
 class CatalogueService {
   final String baseUrl;
   late final Dio dio;
   final AuthService _auth = AuthService();
 
-  CatalogueService({this.baseUrl = 'http://localhost:3100/api'}) {
+  CatalogueService({String? baseUrl}) : baseUrl = baseUrl ?? Environment.baseUrl {
     dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: this.baseUrl,
       connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 100),
     ));

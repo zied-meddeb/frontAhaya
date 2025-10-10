@@ -1,3 +1,4 @@
+import 'package:shop/config/environment.dart';
 import 'package:shop/models/product_model.dart';
 import 'package:dio/dio.dart';
 
@@ -10,9 +11,9 @@ class FavoritesService {
   final AuthService _auth = AuthService();
 
   // Constructor with optional baseUrl parameter for flexibility
-  FavoritesService({this.baseUrl = 'http://localhost:3100/api'}) {
+  FavoritesService({String? baseUrl}) : baseUrl = baseUrl ?? Environment.baseUrl {
     dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: this.baseUrl,
       connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));

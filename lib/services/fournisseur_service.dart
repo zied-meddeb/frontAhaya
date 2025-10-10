@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:shop/config/environment.dart';
 
 import 'auth_service.dart';
 import 'dio_interceptor.dart';
@@ -6,9 +7,9 @@ import 'dio_interceptor.dart';
 class FournisseurService {
   final String baseUrl;
   late final Dio dio;
-  FournisseurService({this.baseUrl = 'http://localhost:3100/api'}){
+  FournisseurService({String? baseUrl}) : baseUrl = baseUrl ?? Environment.baseUrl {
     dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: this.baseUrl,
       connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));

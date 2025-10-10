@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 
 import 'auth_service.dart';
 import 'dio_interceptor.dart';
+import '../config/environment.dart';
 
 class PromotionService {
   final String baseUrl;
@@ -19,9 +20,9 @@ class PromotionService {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T00:00:00.000Z';
   }
 
-  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
+  PromotionService({String? baseUrl}) : baseUrl = baseUrl ?? Environment.baseUrl {
     dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: this.baseUrl,
       connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));

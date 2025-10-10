@@ -1,5 +1,6 @@
 
 import 'package:dio/dio.dart';
+import 'package:shop/config/environment.dart';
 
 import 'auth_service.dart';
 import 'dio_interceptor.dart';
@@ -11,9 +12,9 @@ class CategoriesService {
 
   //http://10.0.2.2:3100
   //http://localhost:3100
-  CategoriesService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  CategoriesService({String? baseUrl}) : baseUrl = baseUrl ?? Environment.baseUrl {
     dio = Dio(BaseOptions(
-      baseUrl: baseUrl,
+      baseUrl: this.baseUrl,
       connectTimeout: const Duration(seconds: 100),
       receiveTimeout: const Duration(seconds: 10),
     ));

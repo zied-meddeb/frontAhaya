@@ -33,6 +33,17 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
+    
+    // Check if we received an activeTab argument
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+      if (args != null && args['activeTab'] != null) {
+        setState(() {
+          _activeTab = args['activeTab'];
+        });
+      }
+    });
+    
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 600),
       vsync: this,
@@ -97,23 +108,6 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
-  Future<void> _checkFournisseurOnboarding() async {
-    try {
-      final onboardingStatus = await _fournisseurService.getOnboardingStatus();
-      
-      if (onboardingStatus['isOnboardingCompleted'] == true) {
-        // Onboarding completed, go to main fournisseur screen
-        Navigator.pushReplacementNamed(context, fournissuerScreen);
-      } else {
-        // Onboarding not completed, go to onboarding screen
-        Navigator.pushReplacementNamed(context, '/fournisseur-onboarding');
-      }
-    } catch (e) {
-      // If there's an error checking onboarding status, go to onboarding screen
-      Navigator.pushReplacementNamed(context, '/fournisseur-onboarding');
-    }
-  }
-
   Future<void> login() async {
     // Validate fields first
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
@@ -159,8 +153,8 @@ class _LoginScreenState extends State<LoginScreen>
           Navigator.pushReplacementNamed(context, entryPointScreenRoute);
         }
         else{
-          // Check if fournisseur has completed onboarding
-          await _checkFournisseurOnboarding();
+          // Go directly to main fournisseur screen (signup now collects all info)
+          Navigator.pushReplacementNamed(context, fournissuerScreen);
         }
 
       }
@@ -390,7 +384,12 @@ class _LoginScreenState extends State<LoginScreen>
                                         cursor: kIsWeb ? SystemMouseCursors.click : MouseCursor.defer,
                                         child: TextButton(
                                           onPressed: () {
-                                            Navigator.pushNamed(context, signUpScreenRoute);
+                                            // Navigate to appropriate signup screen based on active tab
+                                            if (_activeTab == 'fournisseur') {
+                                              Navigator.pushNamed(context, fournisseurSignupScreenRoute);
+                                            } else {
+                                              Navigator.pushNamed(context, signUpScreenRoute);
+                                            }
                                           },
                                           style: TextButton.styleFrom(
                                             padding: EdgeInsets.zero,

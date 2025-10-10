@@ -6,7 +6,7 @@ import 'dio_interceptor.dart';
 class FournisseurService {
   final String baseUrl;
   late final Dio dio;
-  FournisseurService({this.baseUrl = 'http://10.0.2.2:3100/api'}){
+  FournisseurService({this.baseUrl = 'http://localhost:3100/api'}){
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),
@@ -104,26 +104,35 @@ class FournisseurService {
           'addresses': [address], // Send as array with single address
         },
         options: Options(
-          validateStatus: (status) => status == 201,
+          validateStatus: (status) => status != null && status >= 200 && status < 300,
         ),
       );
 
       final decodedResponse = response.data;
 
-      if (decodedResponse['success'] != true) {
-        throw AuthException(decodedResponse['message'] ?? 'Registration failed');
+      // Check if the response has success field and it's true
+      if (decodedResponse is Map && decodedResponse['success'] == true) {
+        return true;
       }
 
-      return true;
+      // If no success field but status is 2xx, consider it successful
+      if (response.statusCode != null && response.statusCode! >= 200 && response.statusCode! < 300) {
+        return true;
+      }
+
+      throw AuthException(decodedResponse['message'] ?? 'Registration failed');
     } on DioException catch (e) {
       if (e.response?.statusCode == 409) {
-        throw AuthException('Email already in use');
+        throw AuthException('Cet email est déjà utilisé');
+      } else if (e.response?.statusCode == 400) {
+        throw AuthException(e.response?.data['message'] ?? 'Données invalides');
       } else if (e.response?.data != null && e.response?.data['message'] != null) {
         throw AuthException(e.response!.data['message']);
       }
-      throw AuthException('Registration failed: ${e.message}');
+      throw AuthException('Erreur d\'inscription: ${e.message}');
     } catch (e) {
-      throw AuthException('An unexpected error occurred');
+      if (e is AuthException) rethrow;
+      throw AuthException('Une erreur inattendue est survenue');
     }
   }
 
@@ -285,6 +294,38 @@ class FournisseurService {
         throw AuthException(e.response!.data['message']);
       }
       throw AuthException('Failed to get onboarding status: ${e.message}');
+    }
+  }
+
+  /// Get fournisseur profile
+  Future<Map<String, dynamic>> getProfile() async {
+    try {
+      final response = await dio.get('$baseUrl/fournisseur/profile');
+
+
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return response.data['data'];
+      }
+      throw Exception('Failed to get profile');
+    } catch (e) {
+      throw Exception('Failed to get profile: ${e.toString()}');
+    }
+  }
+
+  /// Update fournisseur profile
+  Future<Map<String, dynamic>> updateProfile(String id, Map<String, dynamic> profileData) async {
+    try {
+      final response = await dio.put(
+        '$baseUrl/fournisseur/$id',
+        data: profileData,
+      );
+      
+      if (response.statusCode == 200 && response.data['success'] == true) {
+        return response.data['data'];
+      }
+      throw Exception('Failed to update profile');
+    } catch (e) {
+      throw Exception('Failed to update profile: ${e.toString()}');
     }
   }
 

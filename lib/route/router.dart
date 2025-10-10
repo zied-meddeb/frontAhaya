@@ -36,6 +36,10 @@ Route<dynamic> generateRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => const SignUpScreen(),
       );
+    case fournisseurSignupScreenRoute:
+      return MaterialPageRoute(
+        builder: (context) => const FournisseurSignupScreen(),
+      );
     case emailVerification:
       return MaterialPageRoute(
         builder: (context) {

@@ -19,7 +19,7 @@ class PromotionService {
     return '${date.year.toString().padLeft(4, '0')}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}T00:00:00.000Z';
   }
 
-  PromotionService({this.baseUrl = 'http://10.0.2.2:3100/api'}) {
+  PromotionService({this.baseUrl = 'http://localhost:3100/api'}) {
     dio = Dio(BaseOptions(
       baseUrl: baseUrl,
       connectTimeout: const Duration(seconds: 100),

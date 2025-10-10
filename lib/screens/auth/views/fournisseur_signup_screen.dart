@@ -5,6 +5,15 @@ import 'package:shop/models/fournisseur.dart';
 import '../../../route/route_constants.dart';
 import '../../../constants.dart';
 
+// Import AuthException
+class AuthException implements Exception {
+  final String message;
+  AuthException(this.message);
+  
+  @override
+  String toString() => message;
+}
+
 class FournisseurSignupScreen extends StatefulWidget {
   const FournisseurSignupScreen({super.key});
 
@@ -225,8 +234,14 @@ class _FournisseurSignupScreenState extends State<FournisseurSignupScreen> {
 
       if (!mounted) return;
 
-      if (response) {
-        _showSuccess('Inscription réussie ! Veuillez vérifier votre email.');
+      if (response == true) {
+        // Show success message briefly
+        _showSuccess('Compte créé avec succès ! Vérifiez votre email.');
+        
+        // Small delay to show the success message, then navigate
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        if (!mounted) return;
         
         // Navigate to email verification
         Navigator.pushReplacementNamed(
@@ -237,10 +252,15 @@ class _FournisseurSignupScreenState extends State<FournisseurSignupScreen> {
             'userType': 'fournisseur',
           },
         );
+      } else {
+        _showError('Erreur lors de l\'inscription. Veuillez réessayer.');
       }
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      _showError(e.message);
     } catch (e) {
       if (!mounted) return;
-      _showError('Erreur lors de l\'inscription: ${e.toString()}');
+      _showError('Erreur: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);

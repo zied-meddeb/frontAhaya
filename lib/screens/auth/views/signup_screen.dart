@@ -54,6 +54,12 @@ class _SignUpScreenState extends State<SignUpScreen> with TickerProviderStateMix
   void _handleTabChange(String value) async {
     if (_activeTab == value || _isAnimating) return;
 
+    // If switching to fournisseur, navigate to the dedicated signup screen
+    if (value == 'fournisseur') {
+      Navigator.pushNamed(context, fournisseurSignupScreenRoute);
+      return;
+    }
+
     setState(() {
       _isAnimating = true;
     });

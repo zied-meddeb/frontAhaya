@@ -1,6 +1,7 @@
 export '/screens/entry_page/views/entry_page_screen.dart';
 export '/screens/auth/views/login_screen.dart';
 export '/screens/auth/views/signup_screen.dart';
+export '/screens/auth/views/fournisseur_signup_screen.dart';
 export '/screens/auth/views/verification_email.dart';
 export '/route/route_constants.dart';
 export '/screens/favoris/views/favoris_screen.dart';

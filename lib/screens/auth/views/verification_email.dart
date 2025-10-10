@@ -180,8 +180,8 @@ class _EmailVerificationPageState extends State<EmailVerificationPage> {
           if (widget.userType == 'utilisateur') {
             Navigator.pushReplacementNamed(context, entryPointScreenRoute);
           } else {
-            // For fournisseur, check onboarding status and redirect accordingly
-            Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
+            // For fournisseur, skip onboarding (already done in signup) and go directly to main screen
+            Navigator.pushReplacementNamed(context, fournissuerScreen);
           }
         }
       } else {

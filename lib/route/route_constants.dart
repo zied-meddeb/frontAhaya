@@ -62,6 +62,7 @@ const String allPromotionsScreenRoute = "all_promotions";
 const String profileDetailsScreenRoute = "profile_details";
 const String fournissuerScreen ="fournisseur";
 const String fournisseurOnboardingRoute = "fournisseur-onboarding";
+const String fournisseurSignupScreenRoute = "fournisseur-signup";
 const String promotionDetailsRoute = "promotion_details";
 
 

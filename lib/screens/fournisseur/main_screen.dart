@@ -7,6 +7,7 @@ import 'create_offer_screen.dart';
 import 'my_offers_screen.dart';
 import 'payments_screen.dart';
 import 'catalogue_screen.dart';
+import 'profile_screen.dart';
 
 
 class MainScreen extends StatefulWidget {
@@ -26,6 +27,7 @@ class _MainScreenState extends State<MainScreen> {
     const MyOffersScreen(),
     const CatalogueScreen(),
     const PaymentsScreen(),
+    const FournisseurProfileScreen(),
   ];
 
   final List<NavigationDestination> _destinations = [
@@ -48,6 +50,11 @@ class _MainScreenState extends State<MainScreen> {
       icon: Icon(Icons.payment_outlined),
       selectedIcon: Icon(Icons.payment),
       label: 'Paiements',
+    ),
+    const NavigationDestination(
+      icon: Icon(Icons.person_outline),
+      selectedIcon: Icon(Icons.person),
+      label: 'Profil',
     ),
   ];
 

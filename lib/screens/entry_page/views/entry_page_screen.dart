@@ -145,26 +145,9 @@ class _OnBordingScreenState extends State<OnBordingScreen>
       final userRole = await _auth.getUserRole();
       
       if (userRole == 'fournisseur') {
-        // Check if fournisseur has completed onboarding
-        try {
-          final onboardingStatus = await _fournisseurService.getOnboardingStatus();
-          
-          if (onboardingStatus['isOnboardingCompleted'] == true) {
-            // Redirect to fournisseur main screen
-            if (mounted) {
-              Navigator.pushReplacementNamed(context, fournissuerScreen);
-            }
-          } else {
-            // Redirect to onboarding
-            if (mounted) {
-              Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
-            }
-          }
-        } catch (e) {
-          // If error checking onboarding, redirect to onboarding
-          if (mounted) {
-            Navigator.pushReplacementNamed(context, fournisseurOnboardingRoute);
-          }
+        // Go directly to fournisseur main screen (signup now collects all info)
+        if (mounted) {
+          Navigator.pushReplacementNamed(context, fournissuerScreen);
         }
       } else if (userRole == 'user') {
         // Redirect to main app for users
@@ -432,10 +415,24 @@ class _OnBordingScreenState extends State<OnBordingScreen>
                               ? SystemMouseCursors.click
                               : MouseCursor.defer,
                           child: ElevatedButton(
-                            onPressed: () {
-                              // Navigate to espace fournisseur
-                              Navigator.pushNamed(context, supplierScreenRoute);
-
+                            onPressed: () async {
+                              // Check if fournisseur is logged in
+                              final isLoggedIn = await _auth.isLoggedIn();
+                              final userRole = isLoggedIn ? await _auth.getUserRole() : null;
+                              
+                              if (!mounted) return;
+                              
+                              if (isLoggedIn && userRole == 'fournisseur') {
+                                // Fournisseur is logged in, go to main screen
+                                Navigator.pushNamed(context, fournissuerScreen);
+                              } else {
+                                // Not logged in or not a fournisseur, go to login with partenaire tab
+                                Navigator.pushNamed(
+                                  context, 
+                                  logInScreenRoute,
+                                  arguments: {'activeTab': 'fournisseur'}, // Pass the tab to show
+                                );
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black,
